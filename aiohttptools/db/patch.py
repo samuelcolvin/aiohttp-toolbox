@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Callable, NamedTuple
 
-from ..settings import Settings
+from ..settings import BaseSettings
 from .connection import lenient_conn
 
 logger = logging.getLogger('atools.db.patch')
@@ -14,7 +14,7 @@ class Patch(NamedTuple):
     direct: bool = False
 
 
-def run_patch(settings: Settings, live, patch_name):
+def run_patch(settings: BaseSettings, live, patch_name):
     if patch_name is None:
         print(
             'available patches:\n{}'.format(
@@ -86,6 +86,7 @@ def patch(*args, direct=False):
 @patch
 async def rerun_sql(conn, settings, **kwargs):
     """
-    rerun the contents of settings.sql_path, this require you to use "CREATE X IF NOT EXISTS" everywhere
+    rerun the contents of settings.sql_path. WARNING: depending on how you've written your sql this may be dangerous.
     """
+    # this require you to use "CREATE X IF NOT EXISTS" everywhere
     await conn.execute(settings.sql)

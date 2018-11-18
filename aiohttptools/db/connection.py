@@ -4,12 +4,12 @@ import logging
 from async_timeout import timeout
 from buildpg import asyncpg
 
-from aiohttptools.settings import Settings
+from aiohttptools.settings import BaseSettings
 
 logger = logging.getLogger('atools.db.connection')
 
 
-async def lenient_conn(settings: Settings, with_db=True):
+async def lenient_conn(settings: BaseSettings, with_db=True):
     if with_db:
         dsn = settings.pg_dsn
     else:

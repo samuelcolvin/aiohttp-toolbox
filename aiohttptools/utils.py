@@ -1,7 +1,5 @@
 import json
-import random
 import re
-import string
 from typing import Any, Tuple, Type, TypeVar
 
 from aiohttp.web import Response
@@ -16,6 +14,7 @@ JSON_CONTENT_TYPE = 'application/json'
 IP_HEADER = 'X-Forwarded-For'
 PROTO_HEADER = 'X-Forwarded-Proto'
 URI_NOT_ALLOWED = re.compile(r'[^a-zA-Z0-9_\-/.]')
+PydanticModel = TypeVar('PydanticModel', bound=BaseModel)
 
 
 def raw_json_response(json_str, status_=200):
@@ -31,10 +30,7 @@ def json_response(*, status_=200, list_=None, headers_=None, **data):
     )
 
 
-T = TypeVar('Model', bound=BaseModel)
-
-
-async def parse_request(request, model: Type[T], *, headers=None) -> T:
+async def parse_request(request, model: Type[PydanticModel], *, headers=None) -> PydanticModel:
     error_details = None
     try:
         data = await request.json()
@@ -50,7 +46,7 @@ async def parse_request(request, model: Type[T], *, headers=None) -> T:
     raise JsonErrors.HTTPBadRequest(message=error_msg, details=error_details, headers=headers)
 
 
-async def parse_request_ignore_missing(request, model: Type[T], *, headers=None) -> Tuple[T, dict]:
+async def parse_request_ignore_missing(request, model: Type[PydanticModel], *, headers=None) -> Tuple[PydanticModel, dict]:
     try:
         raw_data = await request.json()
     except ValueError:
@@ -142,7 +138,3 @@ def slugify(title):
     name = URI_NOT_ALLOWED.sub('', name)
     name = re.sub('-{2,}', '-', name)
     return name.strip('_-')
-
-
-def pseudo_random_str(length=10):
-    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))

@@ -4,7 +4,7 @@ import os
 
 from buildpg import asyncpg
 
-from ..settings import Settings
+from ..settings import BaseSettings
 from .connection import lenient_conn
 
 logger = logging.getLogger('atools.db')
@@ -15,7 +15,7 @@ WHERE pg_stat_activity.datname = $1 AND pid <> pg_backend_pid();
 """
 
 
-async def prepare_database(settings: Settings, overwrite_existing: bool) -> bool:  # noqa: C901 (ignore complexity)
+async def prepare_database(settings: BaseSettings, overwrite_existing: bool) -> bool:  # noqa: C901 (ignore complexity)
     """
     (Re)create a fresh database and run migrations.
     :param settings: settings to use for db connection
@@ -74,7 +74,7 @@ async def prepare_database(settings: Settings, overwrite_existing: bool) -> bool
     return True
 
 
-def reset_database(settings: Settings):
+def reset_database(settings: BaseSettings):
     if not (os.getenv('CONFIRM_DATABASE_RESET') == 'confirm' or input('Confirm database reset? [yN] ') == 'y'):
         print('cancelling')
     else:

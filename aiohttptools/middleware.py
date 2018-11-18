@@ -8,7 +8,7 @@ from aiohttp.web_middlewares import middleware
 from aiohttp.web_response import Response
 
 from .json_tools import lenient_json
-from .settings import Settings
+from .settings import BaseSettings
 from .utils import HEADER_CROSS_ORIGIN, JSON_CONTENT_TYPE, JsonErrors, get_ip, request_root
 
 logger = logging.getLogger('atools.middleware')
@@ -118,7 +118,7 @@ def _path_match(request, paths):
     return any(p.fullmatch(request.path) for p in paths)
 
 
-def csrf_checks(request, settings: Settings):
+def csrf_checks(request, settings: BaseSettings):
     """
     content-type, origin and referrer checks for CSRF.
 
@@ -149,7 +149,7 @@ def csrf_checks(request, settings: Settings):
 
 @middleware
 async def csrf_middleware(request, handler):
-    settings: Settings = request.app['settings']
+    settings: BaseSettings = request.app['settings']
     if request.method == METH_OPTIONS:
         if 'Access-Control-Request-Method' in request.headers:
             if (
