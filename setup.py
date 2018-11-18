@@ -39,7 +39,16 @@ setup(
     author_email='s@muelcolvin.com',
     url='https://github.com/samuelcolvin/aiohttp-tools',
     license='MIT',
-    packages=['aiohttp-tools'],
+    packages=[
+        'aiohttptools',
+        'aiohttptools.bread',
+        'aiohttptools.db',
+    ],
+    entry_points="""
+        [console_scripts]
+        atools=aiohttptools.cli:cli
+        aiohttptools=aiohttptools.cli:cli
+    """,
     python_requires='>=3.6',
     zip_safe=True,
     install_requires=[
@@ -51,7 +60,7 @@ setup(
         'buildpg>=0.0.2',
         'cchardet>=2.1.4',
         'cryptography>=2.4.1',
-        'pydantic[email]>=0.13.1',
+        'pydantic[email]>=0.15',
         'raven>=6.9.0',
         'raven-aiohttp>=0.7.0',
         'uvloop>=0.11.2',

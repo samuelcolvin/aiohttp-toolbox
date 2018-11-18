@@ -14,7 +14,7 @@ from .db.patch import run_patch
 from .logs import setup_logging
 from .settings import Settings
 
-logger = logging.getLogger('atools.run')
+logger = logging.getLogger('atools.cli')
 
 
 def main():
@@ -60,5 +60,9 @@ def main():
             transport and loop.run_until_complete(transport.close())
 
 
-if __name__ == '__main__':
+def cli():
     sys.exit(main() or 0)
+
+
+if __name__ == '__main__':
+    cli()

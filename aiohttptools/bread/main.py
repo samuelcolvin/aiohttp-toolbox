@@ -1,22 +1,3 @@
-"""
-views:
-
-GET /?filter 200,403
-POST /add/ 201,400,403
-GET /{pk}/ 200,403,404
-POST /{pk}/ 200,400,403,404
-POST /{pk}/delete/ 200,403,404
-OPTIONS / 200,403
-
-rules:
-* options should be the same for create and update and for every update
-
-To update:
-* get all fields
-* update fields data with request data
-* validate that data
-* SQL update with put data only via dict(include_fields=request_data.keys())
-"""
 import logging
 import re
 from enum import Enum
@@ -39,7 +20,7 @@ from ..utils import (
     raw_json_response,
 )
 
-logger = logging.getLogger('nosht.bread')
+logger = logging.getLogger('atools.bread')
 
 
 class Method(str, Enum):

@@ -1,3 +1,4 @@
 /.idea/
 /env/
 *.py[cod]
+*.egg-info/
