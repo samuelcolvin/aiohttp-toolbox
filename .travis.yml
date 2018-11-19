@@ -24,3 +24,14 @@ script:
 - make lint
 - make test && bash <(curl -s https://codecov.io/bash)
 - ls -lha
+
+deploy:
+- provider: pypi
+  user: samuelcolvin
+  password:
+    secure: "hlg1XeHuJFCWexUDUrISGtw0q2bNlG+QqMS/xDJFiGTOGeVexjSpW0NK+s4srPPNvWog1pVB2ZRH/HMkjwMV/RztnS1R8z5LuSBFkb4o5PxSsH2cCODKeQCK+5ZZtw+Aa9yF/9k5UtDzrHBiZtQOL99wBUTqR7PmIYuRmW365dLAhpRwr6aO5BTZQUBL5JMUTbOzv97nvWpWoL0XYmjAYI9BlfcDQL5Jqqf7RzY9nchRH2fRSRxkmtjOQ1GmLNgYFIkZz1uLY154QV28bsS6M8bNlWUo4xnnUENPaJO059ksmlN5l8vEPROlMwVyQ+mj1xR5D2eocOZzzgzh0ovNma3Tj/JWjtYF99BbfIH/AuLdxouMysG1zuqrOoo18XV9qZh0twTeE5iSlIOdMPu+2EtjV/3VoJJgMcEeR5Iw3EFNrodFLJUchnSxuxBPohuqF9OwAGmfYycmzQlvza8A/1a7g6tlKiaalh6DVL2xpzPEIa/+/IKOsaWUeF3L0CdGSQwoN/xHKXo+VihwogwOCDenN3Yp9rAYCoFDzVHrgx380IlbduPD29cOpE5NQIJtoKoP4WyLU6+YlptamHP0uWb5oGbUVuYtPysR3be40H+KI642GyUPbortaRjOlgm66k52bzvbI28/5OtMs82u4LRLKExtCXkHzIGu8Ij6dHE="
+  distributions: sdist bdist_wheel
+  skip_upload_docs: true
+  on:
+    tags: true
+    python: 3.6

@@ -16,7 +16,7 @@ except FileNotFoundError:
 version = SourceFileLoader('version', 'aiohttptools/version.py').load_module()
 
 setup(
-    name='aiohttptools',
+    name='aiohttp-toolbox',
     version=str(version.VERSION),
     description=description,
     long_description=long_description,
