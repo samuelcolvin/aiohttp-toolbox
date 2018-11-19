@@ -24,7 +24,7 @@ class CliError(RuntimeError):
     pass
 
 
-def main():
+def main():  # noqa: C901 (ignore complexity)
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logging_client = setup_logging()
     try:

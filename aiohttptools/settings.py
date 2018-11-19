@@ -4,8 +4,7 @@ from urllib.parse import urlparse
 
 from arq import RedisSettings
 from cryptography.fernet import Fernet
-from pydantic import BaseSettings as _BaseSettings
-from pydantic import PyObject, validator
+from pydantic import BaseSettings as _BaseSettings, PyObject, validator
 
 
 class BaseSettings(_BaseSettings):

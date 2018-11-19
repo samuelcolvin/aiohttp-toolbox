@@ -46,7 +46,9 @@ async def parse_request(request, model: Type[PydanticModel], *, headers=None) ->
     raise JsonErrors.HTTPBadRequest(message=error_msg, details=error_details, headers=headers)
 
 
-async def parse_request_ignore_missing(request, model: Type[PydanticModel], *, headers=None) -> Tuple[PydanticModel, dict]:
+async def parse_request_ignore_missing(
+        request, model: Type[PydanticModel], *, headers=None
+) -> Tuple[PydanticModel, dict]:
     try:
         raw_data = await request.json()
     except ValueError:
