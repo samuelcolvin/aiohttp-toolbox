@@ -30,7 +30,7 @@ def main(*args):  # noqa: C901 (ignore complexity)
     try:
         settings_str = os.getenv('ATOOLS_SETTINGS', 'settings.Settings')
         Settings = import_string(settings_str)
-        if not issubclass(Settings, BaseSettings):
+        if not isinstance(Settings, type) or not issubclass(Settings, BaseSettings):
             raise CliError(f'settings "{Settings}" (from "{settings_str}"), is not a valid Settings class')
 
         settings = Settings()

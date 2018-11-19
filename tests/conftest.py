@@ -1,15 +1,10 @@
 import asyncio
 import json
-import sys
-from pathlib import Path
 
 import pytest
 from aiohttp.test_utils import teardown_test_loop
 from aioredis import create_redis
 from buildpg import asyncpg
-
-sys.path.append(str(Path(__file__).parent.parent))
-# flake8: noqa: E402
 
 from aiohttptools.db import prepare_database
 from aiohttptools.db.helpers import SimplePgPool
@@ -19,8 +14,8 @@ from demo.settings import Settings
 settings_args = dict(
     DATABASE_URL='postgres://postgres@localhost:5432/aiohttptools_test',
     redis_settings='redis://localhost:6379/6',
-    create_app='demo.main.create_app',
-    sql_path='demo/models.sql',
+    create_app='tests.demo.main.create_app',
+    sql_path='tests/demo/models.sql',
 )
 
 
@@ -67,7 +62,8 @@ async def pre_startup_app(app):
 
 
 @pytest.fixture(name='cli')
-async def _fix_cli(settings, db_conn, aiohttp_client, redis):
+async def _fix_cli(settings, db_conn, aiohttp_client, redis, loop):
+    loop.set_debug(True)
     app = await create_app(settings=settings)
     app['test_conn'] = db_conn
     app.on_startup.insert(0, pre_startup_app)

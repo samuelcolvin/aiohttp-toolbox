@@ -31,7 +31,7 @@ async def handle_errors(request):
 class OrganisationBread(Bread):
     class Model(BaseModel):
         name: str
-        slug: constr(max_length=80)
+        slug: constr(max_length=10)
 
     browse_limit_value = 5
     browse_enabled = True
@@ -40,9 +40,8 @@ class OrganisationBread(Bread):
     edit_enabled = True
     delete_enabled = True
 
-    model = Model
     table = 'organisations'
-    browse_order_by_fields = 'slug',
+    browse_order_by_fields = ('slug',)
 
 
 class TestExecView(ExecView):

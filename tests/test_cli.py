@@ -57,7 +57,7 @@ def test_list_patches(caplog):
 def test_patch_not_live(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
     os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 0 == cli_main('_', 'patch', 'rerun_sql')
     assert 'running patch rerun_sql live False' in caplog.text
@@ -67,7 +67,7 @@ def test_patch_not_live(caplog):
 def test_patch_live(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
     os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 0 == cli_main('_', 'patch', 'rerun_sql', '--live')
     assert 'running patch rerun_sql live True' in caplog.text
@@ -77,7 +77,7 @@ def test_patch_live(caplog):
 def test_patch_error(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
     os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 1 == cli_main('_', 'patch', 'error_patch', '--live')
     assert 'RuntimeError: xx' in caplog.text
@@ -86,7 +86,7 @@ def test_patch_error(caplog):
 def test_patch_direct_not_live(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
     os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 1 == cli_main('_', 'patch', 'direct_path')
     assert 'direct patches must be called with' in caplog.text
@@ -95,7 +95,7 @@ def test_patch_direct_not_live(caplog):
 def test_patch_direct_live(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
     os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 0 == cli_main('_', 'patch', 'direct_path', '--live')
     assert 'running patch direct_path direct' in caplog.text
@@ -104,7 +104,7 @@ def test_patch_direct_live(caplog):
 def test_patch_not_found(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
     os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 1 == cli_main('_', 'patch', 'xxx')
     assert 'patch "xxx" not found in patches: [\'rerun_sql\', \'error_patch\', \'direct_path\']' in caplog.text

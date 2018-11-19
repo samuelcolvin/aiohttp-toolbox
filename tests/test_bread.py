@@ -52,7 +52,7 @@ async def test_get(cli, db_conn):
     assert obj == {'id': org_id, 'name': 'Test Org', 'slug': 'test-org'}
 
 
-async def test_create(cli, db_conn):
+async def test_add(cli, db_conn):
     assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
     r = await cli.post_json('/orgs/add/', dict(name='Test Org', slug='whatever'))
     assert r.status == 201, await r.text()
@@ -88,8 +88,26 @@ async def test_delete(cli, db_conn):
     r = await cli.post_json(f'/orgs/{org_id}/delete/')
     assert r.status == 200, await r.text()
     data = await r.json()
-    assert data == {'message': f'item {org_id} deleted from organisations', 'pk': org_id}
+    assert data == {'message': f'Organisation {org_id} deleted', 'pk': org_id}
     assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
+
+
+async def test_add_edit_options(cli):
+    r = await cli.options('/orgs/add/')
+    assert r.status == 200, await r.text()
+    obj_add = await r.json()
+    assert obj_add == {
+        'title': 'Model',
+        'type': 'object',
+        'properties': {
+            'name': {'title': 'Name', 'required': True, 'type': 'str'},
+            'slug': {'title': 'Slug', 'required': True, 'type': 'ConstrainedStrValue'},
+        },
+    }
+    r = await cli.options('/orgs/123/')
+    assert r.status == 200, await r.text()
+    obj_edit = await r.json()
+    assert obj_add == obj_edit
 
 
 async def test_add_conflict(cli, db_conn):
@@ -145,3 +163,21 @@ async def test_invalid_page(cli):
     assert r.status == 400, await r.text()
     obj = await r.json()
     assert obj == {'message': "invalid page '-1'"}
+
+
+async def test_add_invalid(cli, db_conn):
+    r = await cli.post_json('/orgs/add/', dict(name='Test Org', slug='x' * 11))
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {
+        'message': 'Invalid Data',
+        'details': [
+            {
+                'loc': ['slug'],
+                'msg': 'ensure this value has at most 10 characters',
+                'type': 'value_error.any_str.max_length',
+                'ctx': {'limit_value': 10},
+            }
+        ],
+    }
+    assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
