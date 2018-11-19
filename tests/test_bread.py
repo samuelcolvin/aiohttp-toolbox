@@ -63,20 +63,34 @@ async def test_add(cli, db_conn):
     assert org == {'name': 'Test Org', 'slug': 'whatever'}
 
 
-async def test_update(cli, db_conn):
+async def test_edit(cli, db_conn):
     org_id = await db_conn.fetchval_b(
         'INSERT INTO organisations (:values__names) VALUES :values RETURNING id',
         values=Values(name='Test Org', slug='test-org'),
     )
 
-    data = dict(name='Different')
-    r = await cli.post_json(f'/orgs/{org_id}/', data)
+    r = await cli.post_json(f'/orgs/{org_id}/', dict(name='Different'))
     assert r.status == 200, await r.text()
     data = await r.json()
     assert data == {'status': 'ok'}
     assert 1 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
     org = dict(await db_conn.fetchrow('SELECT * FROM organisations'))
     assert org == {'id': org_id, 'name': 'Different', 'slug': 'test-org'}
+
+
+async def test_edit_both(cli, db_conn):
+    org_id = await db_conn.fetchval_b(
+        'INSERT INTO organisations (:values__names) VALUES :values RETURNING id',
+        values=Values(name='Test Org', slug='test-org'),
+    )
+
+    r = await cli.post_json(f'/orgs/{org_id}/', dict(name='x', slug='y'))
+    assert r.status == 200, await r.text()
+    data = await r.json()
+    assert data == {'status': 'ok'}
+    assert 1 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
+    org = dict(await db_conn.fetchrow('SELECT * FROM organisations'))
+    assert org == {'id': org_id, 'name': 'x', 'slug': 'y'}
 
 
 async def test_delete(cli, db_conn):
@@ -165,7 +179,7 @@ async def test_invalid_page(cli):
     assert obj == {'message': "invalid page '-1'"}
 
 
-async def test_add_invalid(cli, db_conn):
+async def test_add_invalid_data(cli, db_conn):
     r = await cli.post_json('/orgs/add/', dict(name='Test Org', slug='x' * 11))
     assert r.status == 400, await r.text()
     obj = await r.json()
@@ -181,3 +195,69 @@ async def test_add_invalid(cli, db_conn):
         ],
     }
     assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
+
+
+async def test_add_invalid_json(cli, db_conn):
+    r = await cli.post_json('/orgs/add/', '{"name": "Test Org", "slug": "foobar"')
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'Invalid JSON'}
+    assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
+
+
+async def test_edit_no_data(cli, db_conn):
+    org_id = await db_conn.fetchval_b(
+        'INSERT INTO organisations (:values__names) VALUES :values RETURNING id',
+        values=Values(name='Test Org', slug='test-org'),
+    )
+
+    r = await cli.post_json(f'/orgs/{org_id}/', dict())
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'no data to save'}
+
+
+async def test_edit_invalid_json(cli, db_conn):
+    org_id = await db_conn.fetchval_b(
+        'INSERT INTO organisations (:values__names) VALUES :values RETURNING id',
+        values=Values(name='Test Org', slug='test-org'),
+    )
+
+    r = await cli.post_json(f'/orgs/{org_id}/', 'xx')
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'Invalid JSON'}
+
+
+async def test_edit_invalid_data(cli, db_conn):
+    org_id = await db_conn.fetchval_b(
+        'INSERT INTO organisations (:values__names) VALUES :values RETURNING id',
+        values=Values(name='Test Org', slug='test-org'),
+    )
+
+    r = await cli.post_json(f'/orgs/{org_id}/', dict(slug='x' * 11))
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {
+        'message': 'Invalid Data',
+        'details': [
+            {
+                'loc': ['slug'],
+                'msg': 'ensure this value has at most 10 characters',
+                'type': 'value_error.any_str.max_length',
+                'ctx': {'limit_value': 10},
+            }
+        ],
+    }
+
+
+async def test_edit_not_dict(cli, db_conn):
+    org_id = await db_conn.fetchval_b(
+        'INSERT INTO organisations (:values__names) VALUES :values RETURNING id',
+        values=Values(name='Test Org', slug='test-org'),
+    )
+
+    r = await cli.post_json(f'/orgs/{org_id}/', [1, 2, 3])
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'data not a dictionary'}

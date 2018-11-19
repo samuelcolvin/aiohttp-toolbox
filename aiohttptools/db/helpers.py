@@ -2,7 +2,7 @@ import asyncio
 import re
 
 
-class SimplePgPool:  # pragma: no cover
+class SimplePgPool:
     """
     dummy connection pool useful for testing.
     """
@@ -50,14 +50,14 @@ async def update_enums(enums, conn):
             await conn.execute(f"ALTER TYPE {name} ADD VALUE IF NOT EXISTS '{t.value}'")
 
 
-async def run_sql_section(chunk_name, conn, settings):
+async def run_sql_section(chunk_name, sql, conn):
     """
-    Run a section of settings.sql_path based on tags in the following format:
+    Run a section of a sql string (eg. settings.sql) based on tags in the following format:
         -- { <chunk name>
         <sql to run>
         -- } <chunk name>
     """
-    m = re.search(f'^-- *{{+ *{chunk_name}(.*)^-- *}}+ *{chunk_name}', settings.sql, flags=re.DOTALL | re.MULTILINE)
+    m = re.search(f'^-- *{{+ *{chunk_name}(.*)^-- *}}+ *{chunk_name}', sql, flags=re.DOTALL | re.MULTILINE)
     if not m:
         raise RuntimeError(f'chunk with name "{chunk_name}" not found')
     sql = m.group(1).strip(' \n')

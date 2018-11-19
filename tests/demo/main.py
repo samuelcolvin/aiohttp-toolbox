@@ -4,6 +4,7 @@ from pydantic import BaseModel, constr
 
 from aiohttptools import create_default_app
 from aiohttptools.bread import Bread, ExecView
+from aiohttptools.utils import decrypt_json, encrypt_json, json_response
 
 
 async def handle(request):
@@ -26,6 +27,16 @@ async def handle_errors(request):
     elif do == 'return_499':
         return web.Response(text='499 response', status=499)
     return web.Response(text='ok')
+
+
+async def encrypt(request):
+    data = await request.json()
+    return json_response(token=encrypt_json(request.app, data))
+
+
+async def decrypt(request):
+    data = await request.json()
+    return json_response(**decrypt_json(request.app, data['token'].encode()))
 
 
 class OrganisationBread(Bread):
@@ -59,6 +70,8 @@ async def create_app(settings):
         web.get('/user', handle_user),
         web.get('/errors/{do}', handle_errors),
         web.post('/exec/', TestExecView.view()),
+        web.get('/encrypt/', encrypt),
+        web.get('/decrypt/', decrypt),
         *OrganisationBread.routes('/orgs/'),
     ]
     return await create_default_app(settings=settings, routes=routes)

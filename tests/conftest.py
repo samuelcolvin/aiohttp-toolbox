@@ -70,9 +70,12 @@ async def _fix_cli(settings, db_conn, aiohttp_client, redis, loop):
     cli = await aiohttp_client(app)
 
     async def post_json(url, data=None, *, origin=None):
+        if isinstance(data, (dict, list)):
+            data = json.dumps(data)
+
         return await cli.post(
             url,
-            data=json.dumps(data) if data else None,
+            data=data,
             headers={
                 'Content-Type': 'application/json',
                 'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',

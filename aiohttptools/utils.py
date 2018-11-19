@@ -35,7 +35,7 @@ async def parse_request(request, model: Type[PydanticModel], *, headers=None) ->
     try:
         data = await request.json()
     except ValueError:
-        error_msg = 'Error decoding JSON'
+        error_msg = 'Invalid JSON'
     else:
         try:
             return model.parse_obj(data)
@@ -52,7 +52,7 @@ async def parse_request_ignore_missing(
     try:
         raw_data = await request.json()
     except ValueError:
-        raise JsonErrors.HTTPBadRequest(message='Error decoding JSON', headers=headers)
+        raise JsonErrors.HTTPBadRequest(message='Invalid JSON', headers=headers)
     if not isinstance(raw_data, dict):
         raise JsonErrors.HTTPBadRequest(message='data not a dictionary', headers=headers)
 
