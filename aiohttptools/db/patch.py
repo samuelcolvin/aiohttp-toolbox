@@ -25,12 +25,14 @@ def run_patch(settings: BaseSettings, live, patch_name):
     patch_lookup = {p.func.__name__: p for p in patches}
     try:
         patch = patch_lookup[patch_name]
-    except KeyError as e:
-        raise RuntimeError(f'patch "{patch_name}" not found in patches: {[p.func.__name__ for p in patches]}') from e
+    except KeyError:
+        logger.error('patch "%s" not found in patches: %s', patch_name, [p.func.__name__ for p in patches])
+        return 1
 
     if patch.direct:
         if not live:
-            raise RuntimeError('direct patches must be called with "--live"')
+            logger.error('direct patches must be called with "--live"')
+            return 1
         logger.info(f'running patch {patch_name} direct')
     else:
         logger.info(f'running patch {patch_name} live {live}')
@@ -72,11 +74,13 @@ def patch(*args, direct=False):
     if args:
         assert len(args) == 1, 'wrong arguments to patch'
         func = args[0]
+        assert asyncio.iscoroutinefunction(func), f'"{func} is not a coroutine'
         patches.append(Patch(func=func))
         return func
     else:
 
         def wrapper(func):
+            assert asyncio.iscoroutinefunction(func), f'"{func} is not a coroutine'
             patches.append(Patch(func=func, direct=direct))
             return func
 

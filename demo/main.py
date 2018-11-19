@@ -54,7 +54,7 @@ class TestExecView(ExecView):
         return {'ans': v}
 
 
-def create_app(settings):
+async def create_app(settings):
     routes = [
         web.get('/', handle),
         web.get('/user', handle_user),
@@ -62,4 +62,4 @@ def create_app(settings):
         web.post('/exec/', TestExecView.view()),
         *OrganisationBread.routes('/orgs/'),
     ]
-    return create_default_app(settings=settings, routes=routes)
+    return await create_default_app(settings=settings, routes=routes)

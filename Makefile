@@ -15,7 +15,7 @@ format:
 lint:
 	python setup.py check -rms
 	flake8 aiohttptools/ tests/
-	pytest aiohttptools -p no:sugar -q
+	pytest aiohttptools -p no:sugar -q -W ignore
 	black -S -l 120 --py36 --check aiohttptools tests
 
 .PHONY: test
