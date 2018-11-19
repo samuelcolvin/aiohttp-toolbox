@@ -1,10 +1,11 @@
 .DEFAULT_GOAL := all
+PYTHONPATH := ${pwd}
 
 .PHONY: install
 install:
 	pip install -U setuptools pip
 	pip install -U -r requirements.txt
-	pip install -U .
+	pip install -U -e .
 
 .PHONY: format
 format:

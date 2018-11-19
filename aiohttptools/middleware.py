@@ -152,7 +152,6 @@ async def csrf_middleware(request, handler):
     settings: BaseSettings = request.app['settings']
     if request.method == METH_OPTIONS:
         if 'Access-Control-Request-Method' in request.headers:
-            debug(settings.csrf_cross_origin_paths)
             if (
                 request.headers.get('Access-Control-Request-Method') == METH_POST
                 and _path_match(request, settings.csrf_cross_origin_paths)

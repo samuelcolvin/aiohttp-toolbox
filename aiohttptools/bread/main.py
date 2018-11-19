@@ -372,7 +372,6 @@ class Bread(ReadBread):
             yield web.post(root + r'/{pk:\d+}/delete/', cls.view(Method.delete), name=f'{name}-delete')
 
     def conflict_exc(self, exc: UniqueViolationError):
-        debug(exc.as_dict()['detail'])
         columns = re.search(r'\((.+?)\)', exc.as_dict()['detail']).group(1).split(', ')
         return JsonErrors.HTTPConflict(
             message='Conflict',

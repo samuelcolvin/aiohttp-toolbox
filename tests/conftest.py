@@ -1,10 +1,15 @@
 import asyncio
 import json
+import sys
+from pathlib import Path
 
 import pytest
 from aiohttp.test_utils import teardown_test_loop
 from aioredis import create_redis
 from buildpg import asyncpg
+
+sys.path.append(str(Path(__file__).parent.parent))
+# flake8: noqa: E402
 
 from aiohttptools.db import prepare_database
 from aiohttptools.db.helpers import SimplePgPool

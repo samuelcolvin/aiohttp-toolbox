@@ -7,11 +7,12 @@ services:
 - postgresql
 - redis-server
 
-python:
-- '3.6'
+matrix:
+  include:
+  - python: '3.6'
+  - python: '3.7'
 
-cache:
-  pip: true
+cache: pip
 
 install:
 - make install
