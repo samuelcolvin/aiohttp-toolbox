@@ -130,7 +130,7 @@ def get_offset(request, paginate_by=100):
         if p < 1:
             raise ValueError()
     except ValueError:
-        raise JsonErrors.HTTPBadRequest(message=f"invalid page '{page}'")
+        raise JsonErrors.HTTPBadRequest(f"invalid page '{page}'")
     else:
         return (p - 1) * paginate_by
 

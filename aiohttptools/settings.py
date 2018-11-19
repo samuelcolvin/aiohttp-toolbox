@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List
+from typing import List, Pattern
 from urllib.parse import urlparse
 
 from arq import RedisSettings
@@ -29,9 +29,9 @@ class BaseSettings(_BaseSettings):
 
     create_app: PyObject = 'main.create_app'
 
-    csrf_ignore_paths: List[Any] = []
-    csrf_upload_paths: List[Any] = []
-    csrf_cross_origin_paths: List[Any] = []
+    csrf_ignore_paths: List[Pattern] = []
+    csrf_upload_paths: List[Pattern] = []
+    csrf_cross_origin_paths: List[Pattern] = []
 
     cookie_name = 'aiohttp-app'
 

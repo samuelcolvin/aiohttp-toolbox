@@ -1,3 +1,5 @@
+import json
+
 from aiohttptools.middleware import exc_extra
 
 
@@ -85,3 +87,32 @@ def test_exc_extra_error():
             raise RuntimeError()
 
     assert exc_extra(Foo()) is None
+
+
+async def test_csrf_failure(cli):
+    r = await cli.post('/orgs/add/', data=json.dumps(dict(name='Test Org', slug='whatever')))
+    assert r.status == 403, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'CSRF failure'}
+
+
+async def test_preflight_ok(cli):
+
+    headers = {'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'Content-Type'}
+    r = await cli.options('/exec/', headers=headers)
+    assert r.status == 200, await r.text()
+    assert r.headers['Access-Control-Allow-Headers'] == 'Content-Type'
+    assert r.headers['Access-Control-Allow-Origin'] == 'null'
+    t = await r.text()
+    assert t == 'ok'
+
+
+async def test_preflight_failed(cli):
+
+    headers = {'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'xxx'}
+    r = await cli.options('/exec/', headers=headers)
+    assert r.status == 403, await r.text()
+    assert 'Access-Control-Allow-Headers' not in r.headers
+    assert r.headers['Access-Control-Allow-Origin'] == 'null'
+    obj = await r.json()
+    assert obj == {'message': 'Access-Control checks failed'}

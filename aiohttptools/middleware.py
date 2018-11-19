@@ -152,6 +152,7 @@ async def csrf_middleware(request, handler):
     settings: BaseSettings = request.app['settings']
     if request.method == METH_OPTIONS:
         if 'Access-Control-Request-Method' in request.headers:
+            debug(settings.csrf_cross_origin_paths)
             if (
                 request.headers.get('Access-Control-Request-Method') == METH_POST
                 and _path_match(request, settings.csrf_cross_origin_paths)
@@ -161,8 +162,8 @@ async def csrf_middleware(request, handler):
                 headers = {'Access-Control-Allow-Headers': 'Content-Type', **HEADER_CROSS_ORIGIN}
                 return Response(text='ok', headers=headers)
             else:
-                raise JsonErrors.HTTPForbidden(error='Access-Control checks failed', headers_=HEADER_CROSS_ORIGIN)
+                raise JsonErrors.HTTPForbidden('Access-Control checks failed', headers=HEADER_CROSS_ORIGIN)
     elif not all(csrf_checks(request, settings)):
-        raise JsonErrors.HTTPForbidden(error='CSRF failure', headers_=HEADER_CROSS_ORIGIN)
+        raise JsonErrors.HTTPForbidden('CSRF failure', headers=HEADER_CROSS_ORIGIN)
 
     return await handler(request)

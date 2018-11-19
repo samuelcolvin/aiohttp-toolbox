@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 from aiohttp.test_utils import teardown_test_loop
@@ -66,4 +67,17 @@ async def _fix_cli(settings, db_conn, aiohttp_client, redis):
     app['test_conn'] = db_conn
     app.on_startup.insert(0, pre_startup_app)
     cli = await aiohttp_client(app)
+
+    async def post_json(url, data=None, *, origin=None):
+        return await cli.post(
+            url,
+            data=json.dumps(data) if data else None,
+            headers={
+                'Content-Type': 'application/json',
+                'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
+                'Origin': origin or f'http://127.0.0.1:{cli.server.port}',
+            },
+        )
+
+    cli.post_json = post_json
     return cli

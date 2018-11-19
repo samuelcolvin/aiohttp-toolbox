@@ -1,4 +1,3 @@
-import json
 import string
 
 from buildpg import MultipleValues, Values
@@ -54,17 +53,8 @@ async def test_get(cli, db_conn):
 
 
 async def test_create(cli, db_conn):
-    data = dict(name='Test Org', slug='whatever')
     assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
-    r = await cli.post(
-        '/orgs/add/',
-        data=json.dumps(data),
-        headers={
-            'Content-Type': 'application/json',
-            'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
-            'Origin': f'http://127.0.0.1:{cli.server.port}',
-        },
-    )
+    r = await cli.post_json('/orgs/add/', dict(name='Test Org', slug='whatever'))
     assert r.status == 201, await r.text()
     assert 1 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
     data = await r.json()
@@ -80,15 +70,7 @@ async def test_update(cli, db_conn):
     )
 
     data = dict(name='Different')
-    r = await cli.post(
-        f'/orgs/{org_id}/',
-        data=json.dumps(data),
-        headers={
-            'Content-Type': 'application/json',
-            'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
-            'Origin': f'http://127.0.0.1:{cli.server.port}',
-        },
-    )
+    r = await cli.post_json(f'/orgs/{org_id}/', data)
     assert r.status == 200, await r.text()
     data = await r.json()
     assert data == {'status': 'ok'}
@@ -103,17 +85,10 @@ async def test_delete(cli, db_conn):
         values=Values(name='Test Org', slug='test-org'),
     )
 
-    r = await cli.post(
-        f'/orgs/{org_id}/delete/',
-        headers={
-            'Content-Type': 'application/json',
-            'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
-            'Origin': f'http://127.0.0.1:{cli.server.port}',
-        },
-    )
+    r = await cli.post_json(f'/orgs/{org_id}/delete/')
     assert r.status == 200, await r.text()
     data = await r.json()
-    assert data == {'message': 'item 11 deleted from organisations', 'pk': 11}
+    assert data == {'message': f'item {org_id} deleted from organisations', 'pk': org_id}
     assert 0 == await db_conn.fetchval('SELECT COUNT(*) FROM organisations')
 
 
@@ -123,15 +98,7 @@ async def test_add_conflict(cli, db_conn):
         values=Values(name='Test Org', slug='test-org'),
     )
     data = dict(name='Test Org', slug='test-org')
-    r = await cli.post(
-        '/orgs/add/',
-        data=json.dumps(data),
-        headers={
-            'Content-Type': 'application/json',
-            'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
-            'Origin': f'http://127.0.0.1:{cli.server.port}',
-        },
-    )
+    r = await cli.post_json('/orgs/add/', data)
     assert r.status == 409, await r.text()
     obj = await r.json()
     assert obj == {
@@ -151,15 +118,7 @@ async def test_update_conflict(cli, db_conn):
     await db_conn.execute_b('INSERT INTO organisations (:values__names) VALUES :values', values=MultipleValues(*orgs))
     org_id = await db_conn.fetchval("select id from organisations where slug='test-org-2'")
     data = dict(slug='test-org-1')
-    r = await cli.post(
-        f'/orgs/{org_id}/',
-        data=json.dumps(data),
-        headers={
-            'Content-Type': 'application/json',
-            'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
-            'Origin': f'http://127.0.0.1:{cli.server.port}',
-        },
-    )
+    r = await cli.post_json(f'/orgs/{org_id}/', data)
     assert r.status == 409, await r.text()
     obj = await r.json()
     assert obj == {
@@ -175,15 +134,14 @@ async def test_update_conflict(cli, db_conn):
 
 
 async def test_exec_view(cli):
-    r = await cli.post(
-        '/exec/',
-        data=json.dumps({'pow': 3}),
-        headers={
-            'Content-Type': 'application/json',
-            'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/',
-            'Origin': f'http://127.0.0.1:{cli.server.port}',
-        },
-    )
+    r = await cli.post_json('/exec/', {'pow': 3}, origin='null')
     assert r.status == 200, await r.text()
     obj = await r.json()
     assert obj == {'ans': 8}
+
+
+async def test_invalid_page(cli):
+    r = await cli.get('/orgs/?page=-1')
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {'message': "invalid page '-1'"}
