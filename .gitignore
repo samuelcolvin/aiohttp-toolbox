@@ -2,3 +2,5 @@
 /env/
 *.py[cod]
 *.egg-info/
+htmlcov/
+.coverage

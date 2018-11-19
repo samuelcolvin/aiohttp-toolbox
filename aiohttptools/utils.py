@@ -47,7 +47,7 @@ async def parse_request(request, model: Type[PydanticModel], *, headers=None) ->
 
 
 async def parse_request_ignore_missing(
-        request, model: Type[PydanticModel], *, headers=None
+    request, model: Type[PydanticModel], *, headers=None
 ) -> Tuple[PydanticModel, dict]:
     try:
         raw_data = await request.json()

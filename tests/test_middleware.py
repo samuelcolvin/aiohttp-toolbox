@@ -2,19 +2,19 @@ from aiohttptools.middleware import exc_extra
 
 
 async def test_200(cli, caplog):
-    r = await cli.get('/whatever')
+    r = await cli.get('/errors/whatever')
     assert r.status == 200, await r.text()
     assert len(caplog.records) == 0
 
 
 async def test_404_no_path(cli, caplog):
-    r = await cli.get('/foo/bar/')
+    r = await cli.get('/errors/foo/bar/')
     assert r.status == 404, await r.text()
     assert len(caplog.records) == 0
 
 
 async def test_500(cli, caplog):
-    r = await cli.get('/500', data='foobar')
+    r = await cli.get('/errors/500', data='foobar')
     assert r.status == 500, await r.text()
     assert 'custom 500 error' == await r.text()
     assert len(caplog.records) == 1
@@ -27,7 +27,7 @@ async def test_500(cli, caplog):
 
 
 async def test_not_unicode(cli, caplog):
-    r = await cli.get('/500', data=b'\xff')
+    r = await cli.get('/errors/500', data=b'\xff')
     assert r.status == 500, await r.text()
     assert 'custom 500 error' == await r.text()
     assert len(caplog.records) == 1
@@ -39,7 +39,7 @@ async def test_not_unicode(cli, caplog):
 
 
 async def test_499(cli, caplog):
-    r = await cli.get('/return_499')
+    r = await cli.get('/errors/return_499')
     assert r.status == 499, await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
@@ -49,7 +49,7 @@ async def test_499(cli, caplog):
 
 
 async def test_value_error(cli, caplog):
-    r = await cli.get('/value_error')
+    r = await cli.get('/errors/value_error')
     assert r.status == 500, await r.text()
     assert '500: Internal Server Error' == await r.text()
     assert len(caplog.records) == 1

@@ -24,7 +24,7 @@ class CliError(RuntimeError):
     pass
 
 
-def main():  # noqa: C901 (ignore complexity)
+def main(*args):  # noqa: C901 (ignore complexity)
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logging_client = setup_logging()
     try:
@@ -36,7 +36,7 @@ def main():  # noqa: C901 (ignore complexity)
         settings = Settings()
         locale.setlocale(locale.LC_ALL, settings.locale)
         try:
-            _, command, *args = sys.argv
+            _, command, *args = args
         except ValueError:
             raise CliError('no command provided, options are: "reset_database", "patch", "worker" or "web"')
 
@@ -70,10 +70,11 @@ def main():  # noqa: C901 (ignore complexity)
         if logging_client and not loop.is_closed():
             transport = logging_client.remote.get_transport()
             transport and loop.run_until_complete(transport.close())
+    return 0
 
 
 def cli():
-    sys.exit(main() or 0)
+    sys.exit(main(*sys.argv) or 0)
 
 
 if __name__ == '__main__':

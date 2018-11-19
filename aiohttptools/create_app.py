@@ -26,8 +26,9 @@ async def cleanup(app: web.Application):
     transport and await transport.close()
 
 
-async def create_default_app(*, settings: BaseSettings, logging_client=None, middleware=None, routes=None,
-                             extra_cleanup=None):
+async def create_default_app(
+    *, settings: BaseSettings, logging_client=None, middleware=None, routes=None, extra_cleanup=None
+):
     logging_client = logging_client or setup_logging()
 
     middleware = middleware or (
