@@ -1,5 +1,4 @@
 .DEFAULT_GOAL := all
-PYTHONPATH := ${pwd}
 
 .PHONY: install
 install:

@@ -58,6 +58,7 @@ def test_run_patch_not_live(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
     os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 0 == cli_main('_', 'patch', 'rerun_sql')
     assert 'running patch rerun_sql live False' in caplog.text
     assert 'not live, rolling back' in caplog.text
@@ -67,6 +68,7 @@ def test_run_patch_live(caplog):
     os.environ['ATOOLS_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
     os.environ['APP_SQL_PATH'] = 'demo/models.sql'
+    os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/aiohttptools_test'
     assert 0 == cli_main('_', 'patch', 'rerun_sql', '--live')
     assert 'running patch rerun_sql live True' in caplog.text
     assert 'live, committed patch' in caplog.text
