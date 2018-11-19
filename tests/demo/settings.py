@@ -1,11 +1,11 @@
 from typing import List, Pattern
 
-from aiohttptools import BaseSettings
-from aiohttptools.db.patch import patch
+from atoolbox import BaseSettings
+from atoolbox.db.patch import patch
 
 
 class Settings(BaseSettings):
-    pg_dsn: str = 'postgres://postgres@localhost:5432/atools_demo'
+    pg_dsn: str = 'postgres://postgres@localhost:5432/atoolbox_demo'
     csrf_cross_origin_paths: List[Pattern] = ['/exec/']
 
 

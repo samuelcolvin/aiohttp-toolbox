@@ -11,7 +11,7 @@ from .json_tools import lenient_json
 from .settings import BaseSettings
 from .utils import HEADER_CROSS_ORIGIN, JSON_CONTENT_TYPE, JsonErrors, get_ip, request_root
 
-logger = logging.getLogger('atools.middleware')
+logger = logging.getLogger('atoolbox.middleware')
 
 
 def exc_extra(exc):

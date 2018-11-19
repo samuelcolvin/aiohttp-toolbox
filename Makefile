@@ -8,32 +8,28 @@ install:
 
 .PHONY: format
 format:
-	isort -rc -w 120 aiohttptools tests
-	black -S -l 120 --py36 aiohttptools tests
+	isort -rc -w 120 atoolbox tests
+	black -S -l 120 --py36 atoolbox tests
 
 .PHONY: lint
 lint:
 	python setup.py check -rms
-	flake8 aiohttptools/ tests/
-	pytest aiohttptools -p no:sugar -q -W ignore
-	black -S -l 120 --py36 --check aiohttptools tests
+	flake8 atoolbox/ tests/
+	pytest atoolbox -p no:sugar -q -W ignore
+	black -S -l 120 --py36 --check atoolbox tests
 
 .PHONY: test
 test:
-	pytest --cov=aiohttptools
+	pytest --cov=atoolbox
 
 .PHONY: testcov
 testcov:
-	pytest --cov=aiohttptools
+	pytest --cov=atoolbox
 	@echo "building coverage html"
 	@coverage html
 
 .PHONY: all
 all: testcov lint
-
-.PHONY: benchmark-all
-benchmark-all:
-	python benchmarks/run.py
 
 .PHONY: clean
 clean:
@@ -42,10 +38,10 @@ clean:
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
 	rm -rf .cache
+	rm -rf .pytest_cache
 	rm -rf htmlcov
 	rm -rf *.egg-info
 	rm -f .coverage
 	rm -f .coverage.*
 	rm -rf build
 	python setup.py clean
-	make -C docs clean

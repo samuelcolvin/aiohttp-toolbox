@@ -6,13 +6,13 @@ from aiohttp.test_utils import teardown_test_loop
 from aioredis import create_redis
 from buildpg import asyncpg
 
-from aiohttptools.db import prepare_database
-from aiohttptools.db.helpers import SimplePgPool
+from atoolbox.db import prepare_database
+from atoolbox.db.helpers import SimplePgPool
 from demo.main import create_app
 from demo.settings import Settings
 
 settings_args = dict(
-    DATABASE_URL='postgres://postgres@localhost:5432/aiohttptools_test',
+    DATABASE_URL='postgres://postgres@localhost:5432/atoolbox_test',
     redis_settings='redis://localhost:6379/6',
     create_app='tests.demo.main.create_app',
     sql_path='tests/demo/models.sql',

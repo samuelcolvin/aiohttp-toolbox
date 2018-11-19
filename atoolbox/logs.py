@@ -36,17 +36,17 @@ def setup_logging(disable_existing=False):
     config = {
         'version': 1,
         'disable_existing_loggers': disable_existing,
-        'formatters': {'atools.default': {'format': '%(levelname)-7s %(name)16s: %(message)s'}},
+        'formatters': {'atoolbox.default': {'format': '%(levelname)-7s %(name)16s: %(message)s'}},
         'handlers': {
-            'atools.default': {'level': log_level, 'class': 'logging.StreamHandler', 'formatter': 'atools.default'},
+            'atoolbox.default': {'level': log_level, 'class': 'logging.StreamHandler', 'formatter': 'atoolbox.default'},
             'sentry': {'level': 'WARNING', 'class': 'raven.handlers.logging.SentryHandler', 'client': client}
             if client
             else {'level': 'WARNING', 'class': 'logging.NullHandler'},
         },
         'loggers': {
-            'atools': {'handlers': ['atools.default', 'sentry'], 'level': log_level},
-            os.getenv('APP_LOGGER_NAME', 'app'): {'handlers': ['atools.default', 'sentry'], 'level': log_level},
-            'arq': {'handlers': ['atools.default', 'sentry'], 'level': log_level},
+            'atoolbox': {'handlers': ['atoolbox.default', 'sentry'], 'level': log_level},
+            os.getenv('APP_LOGGER_NAME', 'app'): {'handlers': ['atoolbox.default', 'sentry'], 'level': log_level},
+            'arq': {'handlers': ['atoolbox.default', 'sentry'], 'level': log_level},
         },
     }
     logging.config.dictConfig(config)

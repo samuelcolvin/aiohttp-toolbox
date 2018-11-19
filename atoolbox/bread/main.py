@@ -20,7 +20,7 @@ from ..utils import (
     raw_json_response,
 )
 
-logger = logging.getLogger('atools.bread')
+logger = logging.getLogger('atoolbox.bread')
 
 
 class Action(str, Enum):

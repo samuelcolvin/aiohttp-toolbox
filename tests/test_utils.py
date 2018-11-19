@@ -3,9 +3,9 @@ import os
 
 import pytest
 
-from aiohttptools.db.helpers import SimplePgPool, run_sql_section
-from aiohttptools.logs import setup_logging
-from aiohttptools.utils import get_ip, slugify
+from atoolbox.db.helpers import SimplePgPool, run_sql_section
+from atoolbox.logs import setup_logging
+from atoolbox.utils import get_ip, slugify
 
 
 @pytest.mark.parametrize(

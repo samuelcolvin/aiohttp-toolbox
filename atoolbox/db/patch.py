@@ -5,7 +5,7 @@ from typing import Callable, NamedTuple
 from ..settings import BaseSettings
 from .connection import lenient_conn
 
-logger = logging.getLogger('atools.db.patch')
+logger = logging.getLogger('atoolbox.db.patch')
 patches = []
 
 

@@ -7,7 +7,7 @@ from buildpg import asyncpg
 from ..settings import BaseSettings
 from .connection import lenient_conn
 
-logger = logging.getLogger('atools.db')
+logger = logging.getLogger('atoolbox.db')
 DROP_CONNECTIONS = """
 SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity

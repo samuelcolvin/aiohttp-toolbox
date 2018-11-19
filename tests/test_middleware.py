@@ -1,6 +1,6 @@
 import json
 
-from aiohttptools.middleware import exc_extra
+from atoolbox.middleware import exc_extra
 
 
 async def test_200(cli, caplog):

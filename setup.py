@@ -13,7 +13,7 @@ except FileNotFoundError:
     long_description = description
 
 # avoid loading the package before requirements are installed:
-version = SourceFileLoader('version', 'aiohttptools/version.py').load_module()
+version = SourceFileLoader('version', 'atoolbox/version.py').load_module()
 
 setup(
     name='aiohttp-toolbox',
@@ -40,14 +40,14 @@ setup(
     url='https://github.com/samuelcolvin/aiohttp-tools',
     license='MIT',
     packages=[
-        'aiohttptools',
-        'aiohttptools.bread',
-        'aiohttptools.db',
+        'atoolbox',
+        'atoolbox.bread',
+        'atoolbox.db',
     ],
     entry_points="""
         [console_scripts]
-        atools=aiohttptools.cli:cli
-        aiohttptools=aiohttptools.cli:cli
+        atoolbox=atoolbox.cli:cli
+        aiohttp_toolbox=atoolbox.cli:cli
     """,
     python_requires='>=3.6',
     zip_safe=True,

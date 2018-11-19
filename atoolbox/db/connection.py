@@ -4,9 +4,9 @@ import logging
 from async_timeout import timeout
 from buildpg import asyncpg
 
-from aiohttptools.settings import BaseSettings
+from atoolbox.settings import BaseSettings
 
-logger = logging.getLogger('atools.db.connection')
+logger = logging.getLogger('atoolbox.db.connection')
 
 
 async def lenient_conn(settings: BaseSettings, with_db=True):
