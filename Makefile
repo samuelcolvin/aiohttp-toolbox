@@ -29,7 +29,7 @@ testcov:
 	@coverage html
 
 .PHONY: all
-all: testcov mypy lint
+all: testcov lint
 
 .PHONY: benchmark-all
 benchmark-all:

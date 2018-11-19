@@ -16,7 +16,7 @@ class Patch(NamedTuple):
 
 def run_patch(settings: BaseSettings, live, patch_name):
     if patch_name is None:
-        print(
+        logger.info(
             'available patches:\n{}'.format(
                 '\n'.join('  {}: {}'.format(p.func.__name__, p.func.__doc__.strip('\n ')) for p in patches)
             )
@@ -31,9 +31,9 @@ def run_patch(settings: BaseSettings, live, patch_name):
     if patch.direct:
         if not live:
             raise RuntimeError('direct patches must be called with "--live"')
-        print(f'running patch {patch_name} direct')
+        logger.info(f'running patch {patch_name} direct')
     else:
-        print(f'running patch {patch_name} live {live}')
+        logger.info(f'running patch {patch_name} live {live}')
     loop = asyncio.get_event_loop()
     return loop.run_until_complete(_run_patch(settings, live, patch))
 
@@ -44,25 +44,25 @@ async def _run_patch(settings, live, patch: Patch):
     if not patch.direct:
         tr = conn.transaction()
         await tr.start()
-    print('=' * 40)
+    logger.info('=' * 40)
     try:
         await patch.func(conn, settings=settings, live=live)
     except BaseException:
-        print('=' * 40)
+        logger.info('=' * 40)
         logger.exception('Error running %s patch', patch.func.__name__)
         if not patch.direct:
             await tr.rollback()
         return 1
     else:
-        print('=' * 40)
+        logger.info('=' * 40)
         if patch.direct:
-            print('committed patch')
+            logger.info('committed patch')
         else:
             if live:
-                print('live, committed patch')
+                logger.info('live, committed patch')
                 await tr.commit()
             else:
-                print('not live, rolling back')
+                logger.info('not live, rolling back')
                 await tr.rollback()
     finally:
         await conn.close()

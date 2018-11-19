@@ -11,7 +11,7 @@ from demo.main import create_app
 from demo.settings import Settings
 
 settings_args = dict(
-    DATABASE_URL='postgres://postgres@localhost:5432/aiohttp_tools_testing',
+    DATABASE_URL='postgres://postgres@localhost:5432/aiohttptools_test',
     redis_settings='redis://localhost:6379/6',
     create_app='demo.main.create_app',
     sql_path='demo/models.sql',

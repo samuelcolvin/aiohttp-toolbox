@@ -1,9 +1,8 @@
 CREATE TABLE IF NOT EXISTS organisations (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) NOT NULL UNIQUE
 );
-CREATE UNIQUE INDEX IF NOT EXISTS org_slug ON organisations USING btree (slug);
 
 DO $$ BEGIN
   CREATE TYPE USER_ROLE AS ENUM ('guest', 'host', 'admin');

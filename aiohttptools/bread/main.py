@@ -350,7 +350,6 @@ class Bread(ReadBread):
         pass
 
     async def delete_execute(self, pk):
-        logger.info('%s %s=%d deleted by user %s', self.table, self.pk_field, pk, self.request['session']['user_id'])
         await self.conn.execute_b(
             self.delete_sql, table=Var(self.table), where=Where(Var(self.pk_field) == pk), print_=self.print_queries
         )
@@ -358,7 +357,7 @@ class Bread(ReadBread):
     async def delete(self, pk) -> web.Response:
         await self.check_item_permissions(pk)
         await self.delete_execute(pk)
-        return json_response(message=f'{self.table} {pk} deleted')
+        return json_response(message=f'item {pk} deleted from {self.table}', pk=pk)
 
     @classmethod
     def _routes(cls, root, name) -> List[web.RouteDef]:
@@ -373,6 +372,7 @@ class Bread(ReadBread):
             yield web.post(root + r'/{pk:\d+}/delete/', cls.view(Method.delete), name=f'{name}-delete')
 
     def conflict_exc(self, exc: UniqueViolationError):
+        debug(exc.as_dict()['detail'])
         columns = re.search(r'\((.+?)\)', exc.as_dict()['detail']).group(1).split(', ')
         return JsonErrors.HTTPConflict(
             message='Conflict',

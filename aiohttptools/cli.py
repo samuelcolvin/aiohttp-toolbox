@@ -48,7 +48,7 @@ def main(*args):  # noqa: C901 (ignore complexity)
             live = '--live' in args
             if live:
                 args.remove('--live')
-            return run_patch(settings, live, args[0] if args else None)
+            return run_patch(settings, live, args[0] if args else None) or 0
         elif command == 'web':
             logger.info('running web server at %s...', settings.port)
             create_app: Callable = settings.create_app
@@ -73,9 +73,9 @@ def main(*args):  # noqa: C901 (ignore complexity)
     return 0
 
 
-def cli():
+def cli():  # pragma: no cover
     sys.exit(main(*sys.argv) or 0)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     cli()

@@ -61,7 +61,7 @@ async def log_extra(request, response=None, **more):
 
 async def log_warning(request, response):
     logger.warning(
-        '%s %d',
+        '%s unexpected response %d',
         request.rel_url,
         response.status,
         extra={'fingerprint': [request.rel_url, str(response.status)], **await log_extra(request, response)},

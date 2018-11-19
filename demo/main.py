@@ -3,7 +3,7 @@ from aiohttp_session import new_session
 from pydantic import BaseModel, constr
 
 from aiohttptools import create_default_app
-from aiohttptools.bread import Bread
+from aiohttptools.bread import Bread, ExecView
 
 
 async def handle(request):
@@ -33,6 +33,7 @@ class OrganisationBread(Bread):
         name: str
         slug: constr(max_length=80)
 
+    browse_limit_value = 5
     browse_enabled = True
     retrieve_enabled = True
     add_enabled = True
@@ -44,11 +45,21 @@ class OrganisationBread(Bread):
     browse_order_by_fields = 'slug',
 
 
+class TestExecView(ExecView):
+    class Model(BaseModel):
+        pow: int
+
+    async def execute(self, m: Model):
+        v = await self.conn.fetchval('SELECT 2 ^ $1', m.pow)
+        return {'ans': v}
+
+
 def create_app(settings):
     routes = [
         web.get('/', handle),
         web.get('/user', handle_user),
         web.get('/errors/{do}', handle_errors),
+        web.post('/exec/', TestExecView.view()),
         *OrganisationBread.routes('/orgs/'),
     ]
     return create_default_app(settings=settings, routes=routes)

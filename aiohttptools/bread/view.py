@@ -10,14 +10,13 @@ from ..utils import json_response, parse_request
 
 
 class View:
-    __slots__ = 'request', 'app', 'conn', 'settings', 'session'
+    __slots__ = 'request', 'app', 'conn', 'settings'
 
     def __init__(self, request):
         self.request: web.Request = request
         self.app: web.Application = request.app
         self.conn: BuildPgConnection = request['conn']
         self.settings = self.app['settings']
-        self.session = request.get('session')
 
     @classmethod
     def view(cls):
@@ -41,7 +40,7 @@ class View:
         raise NotImplementedError
 
 
-class UpdateView(View):
+class ExecView(View):
     Model: Type[BaseModel] = NotImplemented
 
     async def execute(self, m: Model):
