@@ -3,6 +3,10 @@
 History
 -------
 
+v0.0.3 (2018-11-20)
+...................
+* tweak cli and how worker is run
+
 v0.0.2 (2018-11-19)
 ...................
 * change module name

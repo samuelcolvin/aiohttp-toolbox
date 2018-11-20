@@ -17,7 +17,6 @@ from .logs import setup_logging
 from .settings import BaseSettings
 
 logger = logging.getLogger('atoolbox.cli')
-sys.path.append(os.getcwd())
 
 
 class CliError(RuntimeError):
