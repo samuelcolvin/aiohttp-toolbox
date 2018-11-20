@@ -4,10 +4,13 @@ from urllib.parse import urlparse
 
 from arq import RedisSettings
 from cryptography.fernet import Fernet
-from pydantic import BaseSettings as _BaseSettings, PyObject, validator
+from pydantic import BaseSettings as _BaseSettings, validator
 
 
 class BaseSettings(_BaseSettings):
+    worker_func: str = None
+    create_app: str = 'main.create_app'
+
     sql_path: Path = 'models.sql'
     pg_dsn: str = 'postgres://postgres@localhost:5432/app'
     # eg. the db already exists on heroku and never has to be created
@@ -17,17 +20,12 @@ class BaseSettings(_BaseSettings):
     port: int = 8000
 
     # you'll need to set this, generate_key is used to avoid a public default value ever being used in production
-    auth_key: str = Fernet.generate_key()
+    auth_key: str = Fernet.generate_key().decode()
 
     max_request_size = 10 * 1024 ** 2  # 10MB
     locale = 'en_GB.utf8'
 
     http_client_timeout = 10
-
-    worker_path: str = None  # note this needs to be a string not an object
-    worker_name: str = 'Worker'
-
-    create_app: PyObject = 'main.create_app'
 
     csrf_ignore_paths: List[Pattern] = []
     csrf_upload_paths: List[Pattern] = []
@@ -52,4 +50,3 @@ class BaseSettings(_BaseSettings):
 
     class Config:
         fields = {'port': 'PORT', 'pg_dsn': 'DATABASE_URL'}
-        arbitrary_types_allowed = True
