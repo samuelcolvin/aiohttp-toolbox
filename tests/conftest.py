@@ -8,28 +8,45 @@ from buildpg import asyncpg
 
 from atoolbox.db import prepare_database
 from atoolbox.db.helpers import SimplePgPool
+from atoolbox.test_utils import DummyServer, create_dummy_server
 from demo.main import create_app
 from demo.settings import Settings
 
 settings_args = dict(
     DATABASE_URL='postgres://postgres@localhost:5432/atoolbox_test',
-    redis_settings='redis://localhost:6379/6',
+    REDISCLOUD_URL='redis://localhost:6379/6',
     create_app='tests.demo.main.create_app',
     sql_path='tests/demo/models.sql',
 )
 
 
-@pytest.fixture(scope='session', name='settings')
-def _fix_settings():
+@pytest.fixture(scope='session', name='settings_session')
+def _fix_settings_session():
     return Settings(**settings_args)
 
 
 @pytest.fixture(scope='session', name='clean_db')
-def _fix_clean_db(request, settings):
+def _fix_clean_db(request, settings_session):
     # loop fixture has function scope so can't be used here.
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(prepare_database(settings, True))
+    loop.run_until_complete(prepare_database(settings_session, True))
     teardown_test_loop(loop)
+
+
+@pytest.fixture(name='dummy_server')
+async def _fix_dummy_server(loop, aiohttp_server):
+    return await create_dummy_server(aiohttp_server)
+
+
+replaced_url_fields = ('grecaptcha_url',)
+
+
+@pytest.fixture(name='settings')
+def _fix_settings(dummy_server: DummyServer, request, tmpdir):
+    return Settings(
+        **{f: f'{dummy_server.server_name}/{f}/' for f in replaced_url_fields},
+        **settings_args
+    )
 
 
 @pytest.fixture(name='db_conn')

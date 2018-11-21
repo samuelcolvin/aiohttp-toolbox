@@ -17,19 +17,19 @@ def setup_logging(disable_existing=False):
     """
     verbose = '--verbose' in sys.argv
     log_level = 'DEBUG' if verbose else 'INFO'
-    raven_dsn = os.getenv('RAVEN_DSN', None)
-    if raven_dsn in ('', '-'):
+    sentry_dsn = os.getenv('SENTRY_DSN', None)
+    if sentry_dsn in ('', '-'):
         # thus setting an environment variable of "-" means no raven
-        raven_dsn = None
+        sentry_dsn = None
 
     client = None
-    if raven_dsn:
+    if sentry_dsn:
         from raven import Client
         from raven_aiohttp import AioHttpTransport
 
         client = Client(
             transport=AioHttpTransport,
-            dsn=raven_dsn,
+            dsn=sentry_dsn,
             release=get_env_mulitple('COMMIT', 'RELEASE'),
             name=get_env_mulitple('DYNO', 'SERVER_NAME', 'HOSTNAME', 'HOST', 'NAME'),
         )

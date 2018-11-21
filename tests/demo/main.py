@@ -2,7 +2,8 @@ from aiohttp import web
 from aiohttp_session import new_session
 from pydantic import BaseModel, constr
 
-from atoolbox import create_default_app
+from atoolbox import create_default_app, parse_request
+from atoolbox.auth import check_grecaptcha
 from atoolbox.bread import Bread, ExecView
 from atoolbox.utils import decrypt_json, encrypt_json, json_response
 
@@ -39,6 +40,17 @@ async def decrypt(request):
     return json_response(**decrypt_json(request.app, data['token'].encode()))
 
 
+class MyModel(BaseModel):
+    v: int
+    grecaptcha_token: str
+
+
+async def grecaptcha(request):
+    m = await parse_request(request, MyModel)
+    await check_grecaptcha(m, request)
+    return json_response(v_squared=m.v ** 2)
+
+
 class OrganisationBread(Bread):
     class Model(BaseModel):
         name: str
@@ -72,6 +84,7 @@ async def create_app(settings):
         web.post('/exec/', TestExecView.view()),
         web.get('/encrypt/', encrypt),
         web.get('/decrypt/', decrypt),
+        web.post('/grecaptcha/', grecaptcha),
         *OrganisationBread.routes('/orgs/'),
     ]
     return await create_default_app(settings=settings, routes=routes)

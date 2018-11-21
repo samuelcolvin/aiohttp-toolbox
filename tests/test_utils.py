@@ -40,12 +40,12 @@ async def test_decrypt_invalid(cli):
 
 
 def test_loggin_no_raven():
-    os.environ['RAVEN_DSN'] = '-'
+    os.environ['SENTRY_DSN'] = '-'
     assert setup_logging() is None
 
 
 def test_loggin_raven():
-    os.environ['RAVEN_DSN'] = 'https://123:456@sentry.io/789'
+    os.environ['SENTRY_DSN'] = 'https://123:456@sentry.io/789'
     os.environ['RELEASE'] = 'testing'
     assert setup_logging() is not None
 

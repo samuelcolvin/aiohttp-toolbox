@@ -33,6 +33,9 @@ class BaseSettings(_BaseSettings):
 
     cookie_name = 'aiohttp-app'
 
+    grecaptcha_url = 'https://www.google.com/recaptcha/api/siteverify'
+    grecaptcha_secret = 'not-configured'
+
     @property
     def sql(self):
         return self.sql_path.read_text()
@@ -49,4 +52,4 @@ class BaseSettings(_BaseSettings):
         )
 
     class Config:
-        fields = {'port': 'PORT', 'pg_dsn': 'DATABASE_URL'}
+        fields = {'port': 'PORT', 'pg_dsn': 'DATABASE_URL', 'redis_settings': 'REDISCLOUD_URL'}

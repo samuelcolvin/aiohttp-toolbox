@@ -28,6 +28,7 @@ __all__ = (
     'decrypt_json',
     'get_offset',
     'slugify',
+    'RequestError',
 )
 
 
@@ -154,3 +155,19 @@ def slugify(title):
     name = URI_NOT_ALLOWED.sub('', name)
     name = re.sub('-{2,}', '-', name)
     return name.strip('_-')
+
+
+class RequestError(RuntimeError):
+    def __init__(self, status, url, *, text: str = None):
+        self.status = status
+        self.url = url
+        self.text = text
+
+    def __str__(self):
+        return f'response {self.status} from "{self.url}"' + (f':\n{self.text[:400]}' if self.text else '')
+
+    def json(self):
+        return json.loads(self.text)
+
+    def extra(self):
+        return self.text
