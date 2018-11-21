@@ -10,10 +10,6 @@ logger = logging.getLogger('atoolbox.auth')
 REMOVE_PORT = re.compile(r':\d{2,}$')
 
 
-def _remove_port(url):
-    return REMOVE_PORT.sub('', url)
-
-
 async def check_grecaptcha(m: BaseModel, request, *, error_headers=None):
     settings: BaseSettings = request.app['settings']
     client_ip = get_ip(request)
@@ -27,7 +23,7 @@ async def check_grecaptcha(m: BaseModel, request, *, error_headers=None):
             raise RequestError(r.status, settings.grecaptcha_url, text=await r.text())
         data = await r.json()
 
-    if data['success'] and _remove_port(request.host) == data['hostname']:
+    if data['success'] and REMOVE_PORT.sub('', request.host) == data['hostname']:
         logger.info('grecaptcha success')
     else:
         logger.warning(
