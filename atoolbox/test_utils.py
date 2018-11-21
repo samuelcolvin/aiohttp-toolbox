@@ -1,4 +1,4 @@
-from typing import NamedTuple, List
+from typing import List, NamedTuple
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
@@ -30,10 +30,7 @@ async def log_middleware(request, handler):
 
 def create_dummy_app() -> Application:
     app = web.Application(middlewares=(log_middleware,))
-    app.add_routes([
-        web.route('*', '/200/', return_200),
-        web.post('/grecaptcha_url/', grecaptcha),
-    ])
+    app.add_routes([web.route('*', '/200/', return_200), web.post('/grecaptcha_url/', grecaptcha)])
     app['log'] = []
     return app
 

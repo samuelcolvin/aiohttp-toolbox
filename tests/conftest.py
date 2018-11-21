@@ -43,10 +43,7 @@ replaced_url_fields = ('grecaptcha_url',)
 
 @pytest.fixture(name='settings')
 def _fix_settings(dummy_server: DummyServer, request, tmpdir):
-    return Settings(
-        **{f: f'{dummy_server.server_name}/{f}/' for f in replaced_url_fields},
-        **settings_args
-    )
+    return Settings(**{f: f'{dummy_server.server_name}/{f}/' for f in replaced_url_fields}, **settings_args)
 
 
 @pytest.fixture(name='db_conn')

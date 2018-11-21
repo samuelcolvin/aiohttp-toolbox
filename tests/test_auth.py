@@ -1,10 +1,5 @@
-
-
 async def test_grecaptcha_ok(cli, dummy_server):
-    data = {
-        'v': 4,
-        'grecaptcha_token': '__ok__',
-    }
+    data = {'v': 4, 'grecaptcha_token': '__ok__'}
     assert dummy_server.log == []
     r = await cli.post_json('/grecaptcha/', data=data)
     assert r.status == 200, await r.text()
@@ -14,10 +9,7 @@ async def test_grecaptcha_ok(cli, dummy_server):
 
 
 async def test_grecaptcha_wrong(cli, dummy_server):
-    data = {
-        'v': 4,
-        'grecaptcha_token': 'wrong',
-    }
+    data = {'v': 4, 'grecaptcha_token': 'wrong'}
     r = await cli.post_json('/grecaptcha/', data=data)
     assert r.status == 400, await r.text()
     obj = await r.json()
@@ -26,10 +18,7 @@ async def test_grecaptcha_wrong(cli, dummy_server):
 
 
 async def test_grecaptcha_missing(cli, dummy_server):
-    data = {
-        'v': 4,
-        'grecaptcha_token': '',
-    }
+    data = {'v': 4, 'grecaptcha_token': ''}
     r = await cli.post_json('/grecaptcha/', data=data)
     assert r.status == 400, await r.text()
     obj = await r.json()
@@ -38,9 +27,6 @@ async def test_grecaptcha_missing(cli, dummy_server):
 
 
 async def test_grecaptcha_400(cli, dummy_server):
-    data = {
-        'v': 4,
-        'grecaptcha_token': '__400__',
-    }
+    data = {'v': 4, 'grecaptcha_token': '__400__'}
     r = await cli.post_json('/grecaptcha/', data=data)
     assert r.status == 500, await r.text()
