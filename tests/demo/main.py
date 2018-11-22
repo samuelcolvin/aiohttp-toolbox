@@ -5,7 +5,7 @@ from pydantic import BaseModel, constr
 from atoolbox import create_default_app, parse_request
 from atoolbox.auth import check_grecaptcha
 from atoolbox.bread import Bread, ExecView
-from atoolbox.utils import decrypt_json, encrypt_json, json_response
+from atoolbox.utils import JsonErrors, decrypt_json, encrypt_json, json_response
 
 
 async def handle(request):
@@ -65,6 +65,12 @@ class OrganisationBread(Bread):
 
     table = 'organisations'
     browse_order_by_fields = ('slug',)
+
+    async def handle(self):
+        if 'bad' in self.request.query:
+            raise JsonErrors.HTTPBadRequest('very bad')
+        else:
+            return await super().handle()
 
 
 class TestExecView(ExecView):

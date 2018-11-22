@@ -34,7 +34,7 @@ class Action(str, Enum):
 
 
 class BaseBread:
-    __slots__ = 'action', 'request', 'app', 'conn', 'settings'
+    __slots__ = 'action', 'request', 'app', 'conn', 'settings', 'func'
     Model: Type[BaseModel] = NotImplemented
     table: str = NotImplemented
     table_as: str = None
@@ -42,9 +42,10 @@ class BaseBread:
     pk_field: str = 'id'
     print_queries = False
 
-    def __init__(self, action, request):
+    def __init__(self, action, request, func):
         self.action: Action = action
         self.request: web.Request = request
+        self.func = func
         self.app: web.Application = request.app
         self.conn: BuildPgConnection = request['conn']
         self.settings = self.app['settings']
@@ -64,26 +65,25 @@ class BaseBread:
         action_func = getattr(cls, action.value)
 
         async def view(request):
-            self: cls = cls(action, request)
-            await self.check_permissions(action)
-            if action in {Action.retrieve, Action.edit, Action.delete}:
-                return await action_func(self, pk=self.get_pk())
-            else:
-                return await action_func(self)
+            self: cls = cls(action, request, action_func)
+            return await self.handle()
 
         view.view_class = cls
 
         # take name and docstring from class
         update_wrapper(view, cls, updated=())
-        # and possible attributes set by decorators
+        # and possibly attributes set by decorators
         update_wrapper(view, action_func, assigned=())
         return view
 
+    async def handle(self):
+        if self.action in {Action.retrieve, Action.edit, Action.delete}:
+            return await self.func(self, pk=self.get_pk())
+        else:
+            return await self.func(self)
+
     def get_pk(self):
         return int(self.request.match_info['pk'])
-
-    async def check_permissions(self, action):
-        pass
 
     @property
     def single_title(self):

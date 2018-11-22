@@ -261,3 +261,10 @@ async def test_edit_not_dict(cli, db_conn):
     assert r.status == 400, await r.text()
     obj = await r.json()
     assert obj == {'message': 'data not a dictionary'}
+
+
+async def test_handler(cli):
+    r = await cli.get('/orgs/?bad=1')
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'very bad'}

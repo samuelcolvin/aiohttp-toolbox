@@ -3,6 +3,10 @@
 History
 -------
 
+v0.0.5 (2018-11-22)
+...................
+* improve bread, use ``handle`` not ``check_permissions``
+
 v0.0.4 (2018-11-21)
 ...................
 * add ``check_grecaptcha``
