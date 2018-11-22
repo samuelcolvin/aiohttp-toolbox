@@ -47,7 +47,7 @@ class BaseBread:
         self.request: web.Request = request
         self.func = func
         self.app: web.Application = request.app
-        self.conn: BuildPgConnection = request['conn']
+        self.conn: BuildPgConnection = request.get('conn')
         self.settings = self.app['settings']
 
     @classmethod

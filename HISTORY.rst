@@ -3,6 +3,10 @@
 History
 -------
 
+v0.0.6 (2018-11-22)
+...................
+* allow for requests without a ``conn``
+
 v0.0.5 (2018-11-22)
 ...................
 * improve bread, use ``handle`` not ``check_permissions``
