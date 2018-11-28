@@ -8,7 +8,7 @@ from atoolbox.bread import Bread, ExecView
 from atoolbox.utils import JsonErrors, decrypt_json, encrypt_json, json_response
 
 
-async def handle(request):
+async def handle_200(request):
     return web.Response(text='testing')
 
 
@@ -82,15 +82,24 @@ class TestExecView(ExecView):
         return {'ans': v}
 
 
+async def get_user(request):
+    if '499' in request.path:
+        raise RuntimeError('get_user broken')
+    return {'username': 'foobar'}
+
+
 async def create_app(settings):
     routes = [
-        web.get('/', handle),
+        web.get('/', handle_200),
         web.get('/user', handle_user),
         web.get('/errors/{do}', handle_errors),
         web.post('/exec/', TestExecView.view()),
         web.get('/encrypt/', encrypt),
         web.get('/decrypt/', decrypt),
         web.post('/grecaptcha/', grecaptcha),
+        web.post('/upload-path/', handle_200),
         *OrganisationBread.routes('/orgs/'),
     ]
-    return await create_default_app(settings=settings, routes=routes)
+    app = await create_default_app(settings=settings, routes=routes)
+    app['middleware_log_user'] = get_user
+    return app

@@ -1,7 +1,10 @@
 import string
 
 from buildpg import MultipleValues, Values
+from pydantic import BaseModel
 from pytest_toolbox.comparison import AnyInt
+
+from atoolbox.bread import Bread
 
 
 async def test_list_empty(cli):
@@ -268,3 +271,13 @@ async def test_handler(cli):
     assert r.status == 400, await r.text()
     obj = await r.json()
     assert obj == {'message': 'very bad'}
+
+
+async def test_no_routes():
+    class MyBread(Bread):
+        class Model(BaseModel):
+            name: str
+
+        table = 'organisations'
+
+    assert len(MyBread.routes('/')) == 0

@@ -9,11 +9,11 @@ from pydantic import BaseModel, ValidationError, validate_model
 
 from .json_tools import pretty_lenient_json
 
-HEADER_CROSS_ORIGIN = {'Access-Control-Allow-Origin': 'null'}
 JSON_CONTENT_TYPE = 'application/json'
 IP_HEADER = 'X-Forwarded-For'
 PROTO_HEADER = 'X-Forwarded-Proto'
 URI_NOT_ALLOWED = re.compile(r'[^a-zA-Z0-9_\-/.]')
+REMOVE_PORT = re.compile(r':\d{2,}$')
 PydanticModel = TypeVar('PydanticModel', bound=BaseModel)
 
 __all__ = (
@@ -28,6 +28,7 @@ __all__ = (
     'decrypt_json',
     'get_offset',
     'slugify',
+    'remove_port',
     'RequestError',
 )
 
@@ -155,6 +156,10 @@ def slugify(title):
     name = URI_NOT_ALLOWED.sub('', name)
     name = re.sub('-{2,}', '-', name)
     return name.strip('_-')
+
+
+def remove_port(host):
+    return REMOVE_PORT.sub('', host)
 
 
 class RequestError(RuntimeError):

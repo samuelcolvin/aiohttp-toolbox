@@ -6,12 +6,15 @@ from aiohttp.hdrs import METH_GET, METH_OPTIONS, METH_POST
 from aiohttp.web_exceptions import HTTPException, HTTPInternalServerError
 from aiohttp.web_middlewares import middleware
 from aiohttp.web_response import Response
+from aiohttp.web_urldispatcher import MatchInfoError
+from yarl import URL
 
 from .json_tools import lenient_json
 from .settings import BaseSettings
-from .utils import HEADER_CROSS_ORIGIN, JSON_CONTENT_TYPE, JsonErrors, get_ip, request_root
+from .utils import JSON_CONTENT_TYPE, JsonErrors, get_ip, remove_port, request_root
 
 logger = logging.getLogger('atoolbox.middleware')
+CROSS_ORIGIN_ANY = {'Access-Control-Allow-Origin': '*'}
 
 
 def exc_extra(exc):
@@ -120,33 +123,53 @@ def _path_match(request, paths):
     return any(p.fullmatch(request.path) for p in paths)
 
 
-def csrf_checks(request, settings: BaseSettings):
+def csrf_checks(request, settings: BaseSettings):  # noqa: C901 (ignore complexity)
     """
-    content-type, origin and referrer checks for CSRF.
-
-    Forces all non OPTIONS or GET requests to be json except upload paths
+    Content-Type, Origin and Referrer checks for CSRF.
     """
     if request.method == METH_GET or _path_match(request, settings.csrf_ignore_paths):
-        yield True
+        return
+
+    if isinstance(request.match_info, MatchInfoError):
+        # let the other error 404 or 405 occur
         return
 
     ct = request.headers.get('Content-Type', '')
     if _path_match(request, settings.csrf_upload_paths):
-        yield ct.startswith('multipart/form-data; boundary')
+        if not ct.startswith('multipart/form-data; boundary'):
+            return 'upload path, wrong Content-Type'
     else:
-        yield ct == JSON_CONTENT_TYPE
+        if not ct == JSON_CONTENT_TYPE:
+            return 'Content-Type not application/json'
 
     origin = request.headers.get('Origin')
-    path_root = request_root(request)
-    if _path_match(request, settings.csrf_cross_origin_paths):
-        yield origin is None or any(or_regex.fullmatch(origin) for or_regex in settings.cross_origin_origins)
-    else:
-        # origin and host ports differ on localhost when testing, so ignore this case
-        yield origin == path_root or origin is None or request.host.startswith('localhost:')
+    if not origin:
+        # being strict here and requiring Origin to be present, are there any cases where this breaks
+        return 'Origin missing'
 
-        # iframe requests don't include a referrer, thus this isn't checked for cross origin urls
-        r = request.headers.get('Referer', '')
-        yield r.startswith(path_root + '/') or request.host.startswith('localhost:')
+    origin = remove_port(origin)
+    referrer = request.headers.get('Referer')
+    if referrer:
+        referrer_url = URL(referrer)
+        referrer_root = remove_port(referrer_url.scheme + '://' + referrer_url.host)
+    else:
+        referrer_root = None
+
+    if _path_match(request, settings.csrf_cross_origin_paths):
+        # no origin is okay
+        if not any(r.fullmatch(origin) for r in settings.cross_origin_origins):
+            return 'Origin wrong'
+
+        # iframe requests don't include a referrer
+        if referrer_root is not None and not any(r.fullmatch(referrer_root) for r in settings.cross_origin_origins):
+            return 'Referer wrong'
+    else:
+        path_root = remove_port(request_root(request))
+
+        if origin != path_root:
+            return 'Origin wrong'
+        if referrer_root != path_root:
+            return 'Referer wrong'
 
 
 @middleware
@@ -160,11 +183,13 @@ async def csrf_middleware(request, handler):
                 and request.headers.get('Access-Control-Request-Headers').lower() == 'content-type'
             ):
                 # can't check origin here as it's null since the iframe's requests are "cross-origin"
-                headers = {'Access-Control-Allow-Headers': 'Content-Type', **HEADER_CROSS_ORIGIN}
+                headers = {'Access-Control-Allow-Headers': 'Content-Type', **CROSS_ORIGIN_ANY}
                 return Response(text='ok', headers=headers)
             else:
-                raise JsonErrors.HTTPForbidden('Access-Control checks failed', headers=HEADER_CROSS_ORIGIN)
-    elif not all(csrf_checks(request, settings)):
-        raise JsonErrors.HTTPForbidden('CSRF failure', headers=HEADER_CROSS_ORIGIN)
+                raise JsonErrors.HTTPForbidden('Access-Control checks failed', headers=CROSS_ORIGIN_ANY)
+    else:
+        csrf_error = csrf_checks(request, settings)
+        if csrf_error:
+            raise JsonErrors.HTTPForbidden('CSRF failure: ' + csrf_error, headers=CROSS_ORIGIN_ANY)
 
     return await handler(request)

@@ -35,7 +35,7 @@ def main(*args):  # noqa: C901 (ignore complexity)
         try:
             Settings = import_string(settings_str)
         except (ModuleNotFoundError, ImportError) as exc:
-            raise CliError(f'unable to import {settings_str}, {exc.__class__.__name__}: {exc}')
+            raise CliError(f'unable to import "{settings_str}", {exc.__class__.__name__}: {exc}')
 
         if not isinstance(Settings, type) or not issubclass(Settings, BaseSettings):
             raise CliError(f'settings "{Settings}" (from "{settings_str}"), is not a valid Settings class')
@@ -60,7 +60,9 @@ def main(*args):  # noqa: C901 (ignore complexity)
             logger.info('running web server at %s...', settings.port)
             create_app: Callable = import_string(settings.create_app)
             app = create_app(settings=settings)
-            web.run_app(app, port=settings.port, shutdown_timeout=6, access_log=None, print=lambda *args: None)
+            web.run_app(  # pragma: no branch
+                app, port=settings.port, shutdown_timeout=8, access_log=None, print=lambda *args: None
+            )
         elif command == 'worker':
             if settings.worker_func:
                 logger.info('running worker...')

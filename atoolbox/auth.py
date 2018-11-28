@@ -1,13 +1,11 @@
 import logging
-import re
 
 from pydantic import BaseModel
 
 from .settings import BaseSettings
-from .utils import JsonErrors, RequestError, get_ip
+from .utils import JsonErrors, RequestError, get_ip, remove_port
 
 logger = logging.getLogger('atoolbox.auth')
-REMOVE_PORT = re.compile(r':\d{2,}$')
 
 
 async def check_grecaptcha(m: BaseModel, request, *, error_headers=None):
@@ -23,7 +21,7 @@ async def check_grecaptcha(m: BaseModel, request, *, error_headers=None):
             raise RequestError(r.status, settings.grecaptcha_url, text=await r.text())
         data = await r.json()
 
-    if data['success'] and REMOVE_PORT.sub('', request.host) == data['hostname']:
+    if data['success'] and remove_port(request.host) == data['hostname']:
         logger.info('grecaptcha success')
     else:
         logger.warning(
