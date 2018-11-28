@@ -30,6 +30,7 @@ class BaseSettings(_BaseSettings):
     csrf_ignore_paths: List[Pattern] = []
     csrf_upload_paths: List[Pattern] = []
     csrf_cross_origin_paths: List[Pattern] = []
+    cross_origin_origins: List[Pattern] = []
 
     cookie_name = 'aiohttp-app'
 

@@ -17,6 +17,7 @@ settings_args = dict(
     REDISCLOUD_URL='redis://localhost:6379/6',
     create_app='tests.demo.main.create_app',
     sql_path='tests/demo/models.sql',
+    cross_origin_origins=['null'],
 )
 
 

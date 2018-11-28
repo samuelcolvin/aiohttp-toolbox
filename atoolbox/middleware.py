@@ -61,7 +61,8 @@ async def log_extra(request, response=None, **more):
 
 async def log_warning(request, response):
     logger.warning(
-        '%s unexpected response %d',
+        '%s %s unexpected response %d',
+        request.method,
         request.rel_url,
         response.status,
         extra={'fingerprint': [request.rel_url, str(response.status)], **await log_extra(request, response)},
@@ -101,6 +102,7 @@ async def error_middleware(request, handler):
         )
         raise HTTPInternalServerError()
     else:
+        # TODO cope with case that r is not a response
         should_warn_ = request.app.get('middleware_should_warn') or should_warn
         if should_warn_(r):
             await log_warning(request, r)
@@ -137,7 +139,7 @@ def csrf_checks(request, settings: BaseSettings):
     origin = request.headers.get('Origin')
     path_root = request_root(request)
     if _path_match(request, settings.csrf_cross_origin_paths):
-        yield origin == 'null' or origin is None or request.host.startswith('localhost:')
+        yield origin is None or any(or_regex.fullmatch(origin) for or_regex in settings.cross_origin_origins)
     else:
         # origin and host ports differ on localhost when testing, so ignore this case
         yield origin == path_root or origin is None or request.host.startswith('localhost:')
