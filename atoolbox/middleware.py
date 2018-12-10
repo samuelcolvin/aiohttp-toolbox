@@ -142,6 +142,10 @@ def csrf_checks(request, settings: BaseSettings):  # noqa: C901 (ignore complexi
         if not ct == JSON_CONTENT_TYPE:
             return 'Content-Type not application/json'
 
+    if request.host.startswith('localhost:'):
+        # avoid the faff of CSRF checks on localhost
+        return
+
     origin = request.headers.get('Origin')
     if not origin:
         # being strict here and requiring Origin to be present, are there any cases where this breaks

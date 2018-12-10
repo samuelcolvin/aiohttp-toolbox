@@ -15,7 +15,7 @@ class View:
     def __init__(self, request):
         self.request: web.Request = request
         self.app: web.Application = request.app
-        self.conn: BuildPgConnection = request['conn']
+        self.conn: BuildPgConnection = request.get('conn')
         self.settings = self.app['settings']
 
     @classmethod
