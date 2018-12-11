@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any, Tuple, Type, TypeVar
+from typing import Any, Tuple, Type, TypeVar, Union
 
 from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPException
@@ -33,13 +33,13 @@ __all__ = (
 )
 
 
-def raw_json_response(json_str, status_=200):
+def raw_json_response(json_str: Union[str, bytes], status_: int = 200):
     if isinstance(json_str, str):
         body = json_str.encode()
     elif isinstance(json_str, bytes):
         body = json_str
     else:
-        raise TypeError('json_str must be bytes or str')
+        raise TypeError(f'json_str must be bytes or str not "{type(json_str)}')
     return Response(body=body + b'\n', status=status_, content_type=JSON_CONTENT_TYPE)
 
 
