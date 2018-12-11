@@ -3,7 +3,7 @@ import re
 from typing import Any, Tuple, Type, TypeVar
 
 from aiohttp.web import Response
-from aiohttp.web_exceptions import HTTPClientError
+from aiohttp.web_exceptions import HTTPException
 from cryptography.fernet import InvalidToken
 from pydantic import BaseModel, ValidationError, validate_model
 
@@ -34,7 +34,13 @@ __all__ = (
 
 
 def raw_json_response(json_str, status_=200):
-    return Response(body=json_str.encode() + b'\n', status=status_, content_type=JSON_CONTENT_TYPE)
+    if isinstance(json_str, str):
+        body = json_str.encode()
+    elif isinstance(json_str, bytes):
+        body = json_str
+    else:
+        raise TypeError('json_str must be bytes or str')
+    return Response(body=body + b'\n', status=status_, content_type=JSON_CONTENT_TYPE)
 
 
 def json_response(*, status_=200, list_=None, headers_=None, **data):
@@ -96,33 +102,44 @@ def request_root(request):
 
 
 class JsonErrors:
-    class _HTTPClientErrorJson(HTTPClientError):
+    class _HTTPExceptionJson(HTTPException):
+        custom_reason = None
+
         def __init__(self, message, *, details=None, headers=None):
             data = {'message': message}
             if details:
                 data['details'] = details
-            super().__init__(text=pretty_lenient_json(data), content_type=JSON_CONTENT_TYPE, headers=headers)
+            super().__init__(
+                text=pretty_lenient_json(data),
+                content_type=JSON_CONTENT_TYPE,
+                headers=headers,
+                reason=self.custom_reason,
+            )
 
-    class HTTPBadRequest(_HTTPClientErrorJson):
+    class HTTPAccepted(_HTTPExceptionJson):
+        status_code = 202
+
+    class HTTPBadRequest(_HTTPExceptionJson):
         status_code = 400
 
-    class HTTPUnauthorized(_HTTPClientErrorJson):
+    class HTTPUnauthorized(_HTTPExceptionJson):
         status_code = 401
 
-    class HTTPPaymentRequired(_HTTPClientErrorJson):
+    class HTTPPaymentRequired(_HTTPExceptionJson):
         status_code = 402
 
-    class HTTPForbidden(_HTTPClientErrorJson):
+    class HTTPForbidden(_HTTPExceptionJson):
         status_code = 403
 
-    class HTTPNotFound(_HTTPClientErrorJson):
+    class HTTPNotFound(_HTTPExceptionJson):
         status_code = 404
 
-    class HTTPConflict(_HTTPClientErrorJson):
+    class HTTPConflict(_HTTPExceptionJson):
         status_code = 409
 
-    class HTTP470(_HTTPClientErrorJson):
+    class HTTP470(_HTTPExceptionJson):
         status_code = 470
+        custom_reason = 'Invalid user input'
 
 
 def encrypt_json(app, data: Any) -> str:
