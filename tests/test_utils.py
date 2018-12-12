@@ -1,11 +1,14 @@
 import json
 import os
+from typing import List
 
 import pytest
+from aiohttp.test_utils import make_mocked_request
+from pydantic import BaseModel
 
 from atoolbox.db.helpers import SimplePgPool, run_sql_section
 from atoolbox.logs import setup_logging
-from atoolbox.utils import get_ip, slugify
+from atoolbox.utils import JsonErrors, get_ip, parse_request_query, raw_json_response, slugify
 
 
 @pytest.mark.parametrize(
@@ -74,3 +77,54 @@ async def test_simple_pool(db_conn):
     assert (625,) == await conn.fetchrow('SELECT 25 * 25')
     assert [(625,)] == await conn.fetch('SELECT 25 * 25')
     assert 'SELECT 1' == await conn.execute('SELECT 25 * 25')
+
+
+@pytest.mark.parametrize(
+    'input,output', [('{"foo": 42}', b'{"foo": 42}\n'), (b'{"foo": 42}', b'{"foo": 42}\n'), (None, b'null\n')]
+)
+async def test_raw_json_response(input, output):
+    r = raw_json_response(input)
+    assert r.body == output
+    assert r.content_type == 'application/json'
+    assert r.status == 200
+
+
+async def test_raw_json_response_status():
+    r = raw_json_response('null', status_=401)
+    assert r.body == b'null\n'
+    assert r.content_type == 'application/json'
+    assert r.status == 401
+
+
+async def test_raw_json_response_error():
+    with pytest.raises(TypeError):
+        raw_json_response(42)
+
+
+class Model(BaseModel):
+    x: int
+    y: str
+    z: List[int]
+
+
+@pytest.mark.parametrize(
+    'query,result',
+    [
+        ('/?x=123&y=foo%20bar&z=1&z=2', {'x': 123, 'y': 'foo bar', 'z': [1, 2]}),
+        ('/?x=123&y=foo%20bar&z=1', {'x': 123, 'y': 'foo bar', 'z': [1]}),
+    ],
+)
+def test_parse_request_query(query, result):
+    m = parse_request_query(make_mocked_request('GET', query), Model)
+    assert m.dict() == result
+
+
+def test_parse_request_query_error():
+    with pytest.raises(JsonErrors.HTTPBadRequest) as exc_info:
+        parse_request_query(make_mocked_request('GET', '/?x=1&y=2'), Model)
+
+    error = json.loads(exc_info.value.body.decode())
+    assert error == {
+        'message': 'Invalid Data',
+        'details': [{'loc': ['z'], 'msg': 'field required', 'type': 'value_error.missing'}],
+    }

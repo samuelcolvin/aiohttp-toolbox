@@ -6,7 +6,7 @@ from aiohttp import web
 from buildpg.asyncpg import BuildPgConnection
 from pydantic import BaseModel
 
-from ..utils import json_response, parse_request
+from ..utils import json_response, parse_request_json
 
 
 class View:
@@ -47,7 +47,7 @@ class ExecView(View):
         raise NotImplementedError
 
     async def call(self):
-        m = await parse_request(self.request, self.Model)
+        m = await parse_request_json(self.request, self.Model)
         response_data = await shield(self.execute(m))
         response_data = response_data or {'status': 'ok'}
         return json_response(**response_data)

@@ -6,6 +6,7 @@ from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPException
 from cryptography.fernet import InvalidToken
 from pydantic import BaseModel, ValidationError, validate_model
+from pydantic.fields import Shape
 
 from .json_tools import pretty_lenient_json
 
@@ -19,8 +20,9 @@ PydanticModel = TypeVar('PydanticModel', bound=BaseModel)
 __all__ = (
     'raw_json_response',
     'json_response',
-    'parse_request',
-    'parse_request_ignore_missing',
+    'parse_request_json',
+    'parse_request_json_ignore_missing',
+    'parse_request_query',
     'get_ip',
     'request_root',
     'JsonErrors',
@@ -33,26 +35,28 @@ __all__ = (
 )
 
 
-def raw_json_response(json_str: Union[str, bytes], status_: int = 200):
+def raw_json_response(json_str: Union[str, bytes, None], status_: int = 200):
     if isinstance(json_str, str):
         body = json_str.encode()
     elif isinstance(json_str, bytes):
         body = json_str
+    elif json_str is None:
+        body = b'null'
     else:
-        raise TypeError(f'json_str must be bytes or str not "{type(json_str)}')
+        raise TypeError(f'json_str must be bytes or str, not "{type(json_str)}')
     return Response(body=body + b'\n', status=status_, content_type=JSON_CONTENT_TYPE)
 
 
 def json_response(*, status_=200, list_=None, headers_=None, **data):
     return Response(
-        body=json.dumps(data if list_ is None else list_).encode(),
+        body=json.dumps(data if list_ is None else list_).encode() + b'\n',
         status=status_,
         content_type=JSON_CONTENT_TYPE,
         headers=headers_,
     )
 
 
-async def parse_request(request, model: Type[PydanticModel], *, headers=None) -> PydanticModel:
+async def parse_request_json(request, model: Type[PydanticModel], *, headers=None) -> PydanticModel:
     error_details = None
     try:
         data = await request.json()
@@ -68,7 +72,23 @@ async def parse_request(request, model: Type[PydanticModel], *, headers=None) ->
     raise JsonErrors.HTTPBadRequest(message=error_msg, details=error_details, headers=headers)
 
 
-async def parse_request_ignore_missing(
+def parse_request_query(request, model: Type[PydanticModel], *, headers=None) -> PydanticModel:
+    data = {}
+    for k in request.query:
+        v = request.query.getall(k)
+        f = model.__fields__.get(k)
+        if len(v) > 1 or f and f.shape != Shape.SINGLETON:
+            data[k] = v
+        else:
+            data[k] = v[0]
+
+    try:
+        return model(**data)
+    except ValidationError as e:
+        raise JsonErrors.HTTPBadRequest(message='Invalid Data', details=e.errors(), headers=headers)
+
+
+async def parse_request_json_ignore_missing(
     request, model: Type[PydanticModel], *, headers=None
 ) -> Tuple[PydanticModel, dict]:
     try:

@@ -2,7 +2,7 @@ from aiohttp import web
 from aiohttp_session import new_session
 from pydantic import BaseModel, constr
 
-from atoolbox import create_default_app, parse_request
+from atoolbox import create_default_app, parse_request_json
 from atoolbox.auth import check_grecaptcha
 from atoolbox.bread import Bread, ExecView
 from atoolbox.utils import JsonErrors, decrypt_json, encrypt_json, json_response
@@ -46,7 +46,7 @@ class MyModel(BaseModel):
 
 
 async def grecaptcha(request):
-    m = await parse_request(request, MyModel)
+    m = await parse_request_json(request, MyModel)
     await check_grecaptcha(m, request)
     return json_response(v_squared=m.v ** 2)
 
