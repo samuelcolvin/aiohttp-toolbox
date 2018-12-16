@@ -22,10 +22,10 @@ except ImportError:
 
 try:
     from buildpg import asyncpg  # noqa
-
-    pg_dsn_default = 'postgres://postgres@localhost:5432/app'
 except ImportError:
     pg_dsn_default = None
+else:
+    pg_dsn_default = 'postgres://postgres@localhost:5432/app'
 
 
 try:
