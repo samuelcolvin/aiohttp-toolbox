@@ -6,6 +6,7 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from pydantic import BaseModel
 
+from atoolbox import create_default_app
 from atoolbox.db.helpers import SimplePgPool, run_sql_section
 from atoolbox.logs import setup_logging
 from atoolbox.utils import JsonErrors, get_ip, parse_request_query, raw_json_response, slugify
@@ -128,3 +129,9 @@ def test_parse_request_query_error():
         'message': 'Invalid Data',
         'details': [{'loc': ['z'], 'msg': 'field required', 'type': 'value_error.missing'}],
     }
+
+
+async def test_create_app_no_settings():
+    app = await create_default_app()
+    assert app['settings'] is None
+    assert 'auth_fernet' not in app

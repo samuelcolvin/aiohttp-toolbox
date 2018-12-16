@@ -53,12 +53,13 @@ async def cleanup(app: web.Application):
 async def create_default_app(*, settings: BaseSettings = None, logging_client=None, middleware=None, routes=None):
     logging_client = logging_client or setup_logging()
 
-    middleware = middleware or (
-        session_middleware(EncryptedCookieStorage(settings.auth_key, cookie_name=settings.cookie_name)),
-        error_middleware,
-        pg_middleware,
-        csrf_middleware,
-    )
+    if not middleware:
+        middleware = (error_middleware, pg_middleware, csrf_middleware)
+        if hasattr(settings, 'auth_key'):
+            cookie_name = getattr(settings, 'cookie_name', None) or 'AIOHTTP_SESSION'
+            middleware = (
+                session_middleware(EncryptedCookieStorage(settings.auth_key, cookie_name=cookie_name)),
+            ) + middleware
 
     kwargs = {}
     if hasattr(settings, 'max_request_size'):
