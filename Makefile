@@ -7,7 +7,8 @@ install-minimal:
 	pip install -U -e .
 
 .PHONY: install
-install: install-minimal
+install:
+	pip install -U setuptools pip
 	pip install -U -r requirements.txt
 	pip install -U -e .[all]
 
