@@ -16,7 +16,7 @@ def env_fixture():
 
 
 def test_reset_database(mocker, env):
-    f = mocker.patch('atoolbox.cli.reset_database')
+    f = mocker.patch('atoolbox.db.reset_database')
     assert 0 == cli_main('_', 'reset_database')
     assert f.called
 
@@ -41,7 +41,7 @@ def test_args_error(caplog, env):
 
 def test_settings_import_error(caplog, env, mocker):
     os.environ['ATOOLBOX_SETTINGS'] = 'wrong'
-    f = mocker.patch('atoolbox.cli.reset_database')
+    f = mocker.patch('atoolbox.db.reset_database')
     assert 1 == cli_main('_', 'reset_database')
     assert f.called is False
     assert 'unable to import "wrong", ' in caplog.text

@@ -5,6 +5,15 @@ from urllib.parse import urlparse
 from cryptography.fernet import Fernet
 from pydantic import BaseSettings as _BaseSettings, validator
 
+try:
+    from arq import RedisSettings
+except ImportError:
+
+    class RedisSettings:
+        """
+        Mock arq.RedisSettings to satisfy pydantic if arq isn't installed
+        """
+
 
 class BaseSettings(_BaseSettings):
     worker_func: str = None
@@ -15,7 +24,7 @@ class BaseSettings(_BaseSettings):
     # eg. the db already exists on heroku and never has to be created
     pg_db_exists = False
 
-    redis_settings: 'arq.RedisSettings' = 'redis://localhost:6379'
+    redis_settings: RedisSettings = 'redis://localhost:6379'
     port: int = 8000
 
     # you'll need to set this, generate_key is used to avoid a public default value ever being used in production
@@ -49,6 +58,7 @@ class BaseSettings(_BaseSettings):
         if v is None:
             return
         from arq import RedisSettings
+
         conf = urlparse(v)
         return RedisSettings(
             host=conf.hostname, port=conf.port, password=conf.password, database=int((conf.path or '0').strip('/'))

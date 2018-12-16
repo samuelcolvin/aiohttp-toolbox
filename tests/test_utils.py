@@ -137,7 +137,7 @@ async def awaitable():
 
 
 async def test_create_app_no_settings(mocker):
-    f = mocker.patch('atoolbox.create_app.prepare_database', return_value=awaitable())
+    f = mocker.patch('atoolbox.db.prepare_database', return_value=awaitable())
     app = await create_default_app()
     assert app['settings'] is None
     assert 'auth_fernet' not in app
@@ -158,7 +158,7 @@ async def test_create_app_custom_middleware():
 
 
 async def test_create_app_pg(mocker):
-    f = mocker.patch('atoolbox.create_app.prepare_database', return_value=awaitable())
+    f = mocker.patch('atoolbox.db.prepare_database', return_value=awaitable())
 
     class Settings(BaseSettings):
         pg_dsn: str = 'postgres://postgres@localhost:5432/atoolbox_test'

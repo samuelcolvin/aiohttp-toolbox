@@ -34,6 +34,7 @@ async def startup(app: web.Application):
     # if pg is already set the database doesn't need to be created
     if hasattr(settings, 'pg_dsn') and 'pg' not in app:
         from .db import prepare_database
+
         await prepare_database(settings, False)
         app['pg'] = await asyncpg.create_pool_b(dsn=settings.pg_dsn, min_size=2)
 
