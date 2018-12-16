@@ -1,8 +1,13 @@
 .DEFAULT_GOAL := all
 
-.PHONY: install
-install:
+.PHONY: install-minimal
+install-minimal:
 	pip install -U setuptools pip
+	pip install -U -r tests/requirements.txt
+	pip install -U -e .
+
+.PHONY: install
+install: install-minimal
 	pip install -U -r requirements.txt
 	pip install -U -e .[all]
 
@@ -21,6 +26,10 @@ lint:
 .PHONY: test
 test:
 	pytest --cov=atoolbox
+
+.PHONY: test-minimal
+test-minimal:
+	pytest minimal_tests.py --cov=atoolbox
 
 .PHONY: testcov
 testcov:
