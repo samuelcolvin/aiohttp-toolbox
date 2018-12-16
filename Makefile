@@ -4,7 +4,7 @@
 install:
 	pip install -U setuptools pip
 	pip install -U -r requirements.txt
-	pip install -U -e .
+	pip install -U -e .[all]
 
 .PHONY: format
 format:

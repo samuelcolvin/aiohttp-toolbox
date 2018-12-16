@@ -3,16 +3,28 @@ import logging
 from typing import Optional
 
 from aiohttp import ClientSession, ClientTimeout, web
-from aiohttp_session import session_middleware
-from aiohttp_session.cookie_storage import EncryptedCookieStorage
-from arq import create_pool_lenient
-from buildpg import asyncpg
 from cryptography import fernet
 
-from .db import prepare_database
 from .logs import setup_logging
 from .middleware import csrf_middleware, error_middleware, pg_middleware
 from .settings import BaseSettings
+
+try:
+    from arq import create_pool_lenient
+except ImportError:  # pragma: no-cover
+    create_pool_lenient = None
+
+try:
+    from aiohttp_session import session_middleware
+    from aiohttp_session.cookie_storage import EncryptedCookieStorage
+except ImportError:  # pragma: no-cover
+    session_middleware = None
+    EncryptedCookieStorage = None
+
+try:
+    from buildpg import asyncpg
+except ImportError:  # pragma: no-cover
+    asyncpg = None
 
 logger = logging.getLogger('atoolbox.web')
 
@@ -21,6 +33,7 @@ async def startup(app: web.Application):
     settings: Optional[BaseSettings] = app['settings']
     # if pg is already set the database doesn't need to be created
     if hasattr(settings, 'pg_dsn') and 'pg' not in app:
+        from .db import prepare_database
         await prepare_database(settings, False)
         app['pg'] = await asyncpg.create_pool_b(dsn=settings.pg_dsn, min_size=2)
 

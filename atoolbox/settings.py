@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List, Pattern
 from urllib.parse import urlparse
 
-from arq import RedisSettings
 from cryptography.fernet import Fernet
 from pydantic import BaseSettings as _BaseSettings, validator
 
@@ -16,7 +15,7 @@ class BaseSettings(_BaseSettings):
     # eg. the db already exists on heroku and never has to be created
     pg_db_exists = False
 
-    redis_settings: RedisSettings = 'redis://localhost:6379'
+    redis_settings: 'arq.RedisSettings' = 'redis://localhost:6379'
     port: int = 8000
 
     # you'll need to set this, generate_key is used to avoid a public default value ever being used in production
@@ -47,6 +46,9 @@ class BaseSettings(_BaseSettings):
 
     @validator('redis_settings', always=True, pre=True)
     def parse_redis_settings(cls, v):
+        if v is None:
+            return
+        from arq import RedisSettings
         conf = urlparse(v)
         return RedisSettings(
             host=conf.hostname, port=conf.port, password=conf.password, database=int((conf.path or '0').strip('/'))
