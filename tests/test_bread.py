@@ -117,9 +117,10 @@ async def test_add_edit_options(cli):
         'title': 'Model',
         'type': 'object',
         'properties': {
-            'name': {'title': 'Name', 'required': True, 'type': 'str'},
-            'slug': {'title': 'Slug', 'required': True, 'type': 'ConstrainedStrValue'},
+            'name': {'title': 'Name', 'type': 'string'},
+            'slug': {'title': 'Slug', 'maxLength': 10, 'type': 'string'},
         },
+        'required': ['name', 'slug'],
     }
     r = await cli.options('/orgs/123/')
     assert r.status == 200, await r.text()

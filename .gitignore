@@ -2,6 +2,7 @@
 /env/
 /env36/
 /env37/
+/env-minimal/
 *.py[cod]
 *.egg-info/
 htmlcov/

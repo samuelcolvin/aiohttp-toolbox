@@ -4,10 +4,12 @@ from typing import List
 
 import pytest
 from aiohttp.test_utils import make_mocked_request
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseSettings
 
+from atoolbox.create_app import cleanup, create_default_app, startup
 from atoolbox.db.helpers import SimplePgPool, run_sql_section
 from atoolbox.logs import setup_logging
+from atoolbox.middleware import error_middleware
 from atoolbox.utils import JsonErrors, get_ip, parse_request_query, raw_json_response, slugify
 
 
@@ -128,3 +130,42 @@ def test_parse_request_query_error():
         'message': 'Invalid Data',
         'details': [{'loc': ['z'], 'msg': 'field required', 'type': 'value_error.missing'}],
     }
+
+
+async def awaitable():
+    pass
+
+
+async def test_create_app_no_settings(mocker):
+    f = mocker.patch('atoolbox.db.prepare_database', return_value=awaitable())
+    app = await create_default_app()
+    assert app['settings'] is None
+    assert 'auth_fernet' not in app
+    assert 'http_client' not in app
+    assert len(app.middlewares) == 3
+
+    await startup(app)
+    assert 'http_client' in app
+    assert 'pg' not in app
+    assert 'redis' not in app
+    await cleanup(app)
+    assert not f.called
+
+
+async def test_create_app_custom_middleware():
+    app = await create_default_app(middleware=(error_middleware,))
+    assert len(app.middlewares) == 1
+
+
+async def test_create_app_pg(mocker):
+    f = mocker.patch('atoolbox.db.prepare_database', return_value=awaitable())
+
+    class Settings(BaseSettings):
+        pg_dsn: str = 'postgres://postgres@localhost:5432/atoolbox_test'
+
+    app = await create_default_app(settings=Settings())
+    assert app['settings'] is not None
+
+    await startup(app)
+    await cleanup(app)
+    assert f.called

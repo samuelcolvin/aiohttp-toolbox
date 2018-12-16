@@ -54,15 +54,19 @@ setup(
     install_requires=[
         'aiodns>=1.1.1',
         'aiohttp>=3.4.4',
-        'aiohttp-session>=2.6.0',
-        'arq>=0.14',
-        'asyncpg>=0.17.0',
-        'buildpg>=0.0.2',
         'cchardet>=2.1.4',
         'cryptography>=2.4.1',
-        'pydantic[email]>=0.15',
+        'pydantic>=0.15',
         'raven>=6.9.0',
         'raven-aiohttp>=0.7.0',
         'uvloop>=0.11.2',
     ],
+    extras_require={
+        'all': [
+            'aiohttp-session>=2.6.0',
+            'arq>=0.14',
+            'asyncpg>=0.17.0',
+            'buildpg>=0.0.2',
+        ],
+    }
 )

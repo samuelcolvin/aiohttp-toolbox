@@ -14,19 +14,21 @@ matrix:
     dist: xenial
     sudo: required
 
-cache: pip
-
-install:
-- make install
-- pip freeze
-
 script:
+- pip freeze | xargs pip uninstall -y
+- make install-minimal
+- make test-minimal && mv .coverage .coverage.minimal
+
+- make install
 - make lint
-- make test
+- make test && mv .coverage .coverage.full
+
 - ./tests/check_tag.py
 - ls -lha
+- pip freeze
 
 after_success:
+- coverage combine
 - bash <(curl -s https://codecov.io/bash)
 
 deploy:

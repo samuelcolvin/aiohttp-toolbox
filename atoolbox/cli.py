@@ -11,8 +11,6 @@ import uvloop
 from aiohttp import web
 from pydantic.utils import import_string
 
-from .db import reset_database
-from .db.patch import run_patch
 from .logs import setup_logging
 from .settings import BaseSettings
 
@@ -49,12 +47,16 @@ def main(*args):  # noqa: C901 (ignore complexity)
 
         if command == 'reset_database':
             logger.info('running reset_database...')
+            from .db import reset_database
+
             reset_database(settings)
         elif command == 'patch':
             logger.info('running patch...')
             live = '--live' in args
             if live:
                 args.remove('--live')
+            from .db.patch import run_patch
+
             return run_patch(settings, live, args[0] if args else None) or 0
         elif command == 'web':
             logger.info('running web server at %s...', settings.port)
