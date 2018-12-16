@@ -169,3 +169,13 @@ async def test_create_app_pg(mocker):
     await startup(app)
     await cleanup(app)
     assert f.called
+
+
+async def test_redis_settings_module():
+    from atoolbox.settings import RedisSettings
+    assert RedisSettings.__module__ == 'arq.utils'
+
+    s = BaseSettings()
+    assert s.redis_settings is not None
+    assert s.pg_dsn is not None
+    assert s.auth_key is not None

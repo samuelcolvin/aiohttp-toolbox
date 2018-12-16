@@ -78,7 +78,7 @@ class BaseSettings(_BaseSettings):
             return
 
         if RedisSettings.__module__ != 'arq.utils':
-            raise ImportError(f'arq must be installed to use redis, redis_settings set to {v!r}')
+            raise RuntimeError(f'arq must be installed to use redis, redis_settings set to {v!r}')
         conf = urlparse(v)
         return RedisSettings(
             host=conf.hostname, port=conf.port, password=conf.password, database=int((conf.path or '0').strip('/'))

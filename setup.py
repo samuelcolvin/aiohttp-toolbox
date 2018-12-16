@@ -55,7 +55,6 @@ setup(
         'aiodns>=1.1.1',
         'aiohttp>=3.4.4',
         'cchardet>=2.1.4',
-        'cryptography>=2.4.1',
         'pydantic>=0.15',
         'raven>=6.9.0',
         'raven-aiohttp>=0.7.0',
@@ -67,6 +66,7 @@ setup(
             'arq>=0.14',
             'asyncpg>=0.17.0',
             'buildpg>=0.0.2',
+            'cryptography>=2.4.1',
         ],
     }
 )

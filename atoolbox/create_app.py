@@ -82,8 +82,12 @@ async def create_default_app(*, settings: BaseSettings = None, logging_client=No
 
     app.update(settings=settings, logging_client=logging_client)
     if auth_key:
-        from cryptography import fernet
-        app['auth_fernet'] = fernet.Fernet(auth_key)
+        try:
+            from cryptography import fernet
+        except ImportError:
+            warnings.warn('cryptography needs to be installed to use auth_key', RuntimeWarning)
+        else:
+            app['auth_fernet'] = fernet.Fernet(auth_key)
 
     app.on_startup.append(startup)
     app.on_cleanup.append(cleanup)
