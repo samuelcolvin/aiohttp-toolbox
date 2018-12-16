@@ -4,7 +4,6 @@ from typing import Any, Tuple, Type, TypeVar, Union
 
 from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPException
-from cryptography.fernet import InvalidToken
 from pydantic import BaseModel, ValidationError, validate_model
 from pydantic.fields import Shape
 
@@ -167,6 +166,8 @@ def encrypt_json(app, data: Any) -> str:
 
 
 def decrypt_json(app, token: bytes, *, ttl: int = None, headers=None) -> Any:
+    from cryptography.fernet import InvalidToken
+
     try:
         return json.loads(app['auth_fernet'].decrypt(token, ttl=ttl).decode())
     except InvalidToken:
