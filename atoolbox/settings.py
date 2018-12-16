@@ -19,8 +19,10 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             raise RuntimeError('arq not installed')
 
+
 try:
-    from buildpg import asyncpg
+    from buildpg import asyncpg  # noqa
+
     pg_dsn_default = 'postgres://postgres@localhost:5432/app'
 except ImportError:
     pg_dsn_default = None

@@ -4,7 +4,7 @@ from typing import List
 
 import pytest
 from aiohttp.test_utils import make_mocked_request
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel, BaseSettings as PydanticBaseSettings
 
 from atoolbox.create_app import cleanup, create_default_app, startup
 from atoolbox.db.helpers import SimplePgPool, run_sql_section
@@ -137,7 +137,7 @@ async def awaitable():
 
 
 async def test_create_app_no_settings(mocker):
-    f = mocker.patch('atoolbox.db.prepare_database', return_value=awaitable())
+    f = mocker.patch('atoolbox.db.prepare_database')
     app = await create_default_app()
     assert app['settings'] is None
     assert 'auth_fernet' not in app
@@ -160,7 +160,7 @@ async def test_create_app_custom_middleware():
 async def test_create_app_pg(mocker):
     f = mocker.patch('atoolbox.db.prepare_database', return_value=awaitable())
 
-    class Settings(BaseSettings):
+    class Settings(PydanticBaseSettings):
         pg_dsn: str = 'postgres://postgres@localhost:5432/atoolbox_test'
 
     app = await create_default_app(settings=Settings())
@@ -172,7 +172,8 @@ async def test_create_app_pg(mocker):
 
 
 async def test_redis_settings_module():
-    from atoolbox.settings import RedisSettings
+    from atoolbox.settings import BaseSettings, RedisSettings
+
     assert RedisSettings.__module__ == 'arq.utils'
 
     s = BaseSettings()
