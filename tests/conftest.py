@@ -26,6 +26,7 @@ def _fix_settings_session():
 def _fix_clean_db(request, settings_session):
     # loop fixture has function scope so can't be used here.
     from atoolbox.db import prepare_database
+
     loop = asyncio.new_event_loop()
     loop.run_until_complete(prepare_database(settings_session, True))
     teardown_test_loop(loop)
@@ -47,6 +48,7 @@ def _fix_settings(dummy_server: DummyServer, request, tmpdir):
 @pytest.fixture(name='db_conn')
 async def _fix_db_conn(loop, settings, clean_db):
     from buildpg import asyncpg
+
     conn = await asyncpg.connect_b(dsn=settings.pg_dsn, loop=loop)
 
     tr = conn.transaction()
@@ -62,6 +64,7 @@ async def _fix_db_conn(loop, settings, clean_db):
 async def redis(loop, settings):
     addr = settings.redis_settings.host, settings.redis_settings.port
     from aioredis import create_redis
+
     redis = await create_redis(addr, db=settings.redis_settings.database, loop=loop)
     await redis.flushdb()
 
@@ -73,6 +76,7 @@ async def redis(loop, settings):
 
 async def pre_startup_app(app):
     from atoolbox.db.helpers import SimplePgPool
+
     app['pg'] = SimplePgPool(app['test_conn'])
 
 

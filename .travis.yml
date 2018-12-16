@@ -15,6 +15,7 @@ matrix:
     sudo: required
 
 script:
+- pip freeze | xargs pip uninstall -y
 - make install-minimal
 - make test-minimal
 - make install

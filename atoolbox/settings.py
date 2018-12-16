@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Pattern, Optional
+from typing import List, Optional, Pattern
 from urllib.parse import urlparse
 
 from cryptography.fernet import Fernet
@@ -7,6 +7,7 @@ from pydantic import BaseSettings as _BaseSettings, validator
 
 try:
     from arq import RedisSettings
+
     redis_settings_default = 'redis://localhost:6379'
 except ImportError:
     redis_settings_default = None
@@ -15,6 +16,7 @@ except ImportError:
         """
         Mock arq.RedisSettings to satisfy pydantic if arq isn't installed
         """
+
         def __init__(self, *args, **kwargs):
             raise RuntimeError('arq not installed')
 
