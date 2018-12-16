@@ -3,6 +3,10 @@
 History
 -------
 
+v0.0.9 (2018-12-16)
+...................
+* allow settings and redis and postgres to be optional when creating apps
+
 v0.0.8 (2018-12-12)
 ...................
 * optional ``conn`` on ``View``
