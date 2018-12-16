@@ -1,30 +1,13 @@
 import asyncio
 import logging
+import warnings
 from typing import Optional
 
 from aiohttp import ClientSession, ClientTimeout, web
-from cryptography import fernet
 
 from .logs import setup_logging
 from .middleware import csrf_middleware, error_middleware, pg_middleware
 from .settings import BaseSettings
-
-try:
-    from arq import create_pool_lenient
-except ImportError:  # pragma: no-cover
-    create_pool_lenient = None
-
-try:
-    from aiohttp_session import session_middleware
-    from aiohttp_session.cookie_storage import EncryptedCookieStorage
-except ImportError:  # pragma: no-cover
-    session_middleware = None
-    EncryptedCookieStorage = None
-
-try:
-    from buildpg import asyncpg
-except ImportError:  # pragma: no-cover
-    asyncpg = None
 
 logger = logging.getLogger('atoolbox.web')
 
@@ -32,14 +15,23 @@ logger = logging.getLogger('atoolbox.web')
 async def startup(app: web.Application):
     settings: Optional[BaseSettings] = app['settings']
     # if pg is already set the database doesn't need to be created
-    if hasattr(settings, 'pg_dsn') and 'pg' not in app:
-        from .db import prepare_database
+    if 'pg' not in app and getattr(settings, 'pg_dsn', None):
+        try:
+            from .db import prepare_database
+            from buildpg import asyncpg
+        except ImportError:
+            warnings.warn('buildpg and asyncpg need to be installed to use postgres', RuntimeWarning)
+        else:
+            await prepare_database(settings, False)
+            app['pg'] = await asyncpg.create_pool_b(dsn=settings.pg_dsn, min_size=2)
 
-        await prepare_database(settings, False)
-        app['pg'] = await asyncpg.create_pool_b(dsn=settings.pg_dsn, min_size=2)
-
-    if hasattr(settings, 'redis_settings'):
-        app['redis'] = await create_pool_lenient(settings.redis_settings, app.loop)
+    if getattr(settings, 'redis_settings', None):
+        try:
+            from arq import create_pool_lenient
+        except ImportError:
+            warnings.warn('arq and aioredis need to be installed to use redis', RuntimeWarning)
+        else:
+            app['redis'] = await create_pool_lenient(settings.redis_settings, app.loop)
 
     timeout = getattr(settings, 'http_client_timeout', 30)
     app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=app.loop)
@@ -67,13 +59,20 @@ async def cleanup(app: web.Application):
 async def create_default_app(*, settings: BaseSettings = None, logging_client=None, middleware=None, routes=None):
     logging_client = logging_client or setup_logging()
 
+    auth_key = getattr(settings, 'auth_key', None)
     if not middleware:
         middleware = (error_middleware, pg_middleware, csrf_middleware)
-        if hasattr(settings, 'auth_key'):
-            cookie_name = getattr(settings, 'cookie_name', None) or 'AIOHTTP_SESSION'
-            middleware = (
-                session_middleware(EncryptedCookieStorage(settings.auth_key, cookie_name=cookie_name)),
-            ) + middleware
+        if auth_key:
+            try:
+                from aiohttp_session import session_middleware
+                from aiohttp_session.cookie_storage import EncryptedCookieStorage
+            except ImportError:
+                warnings.warn('aiohttp_session and cryptography needs to be installed to use sessions', RuntimeWarning)
+            else:
+                cookie_name = getattr(settings, 'cookie_name', None) or 'AIOHTTP_SESSION'
+                middleware = (
+                    session_middleware(EncryptedCookieStorage(auth_key, cookie_name=cookie_name)),
+                ) + middleware
 
     kwargs = {}
     if hasattr(settings, 'max_request_size'):
@@ -82,8 +81,9 @@ async def create_default_app(*, settings: BaseSettings = None, logging_client=No
     app = web.Application(logger=None, middlewares=middleware, **kwargs)
 
     app.update(settings=settings, logging_client=logging_client)
-    if hasattr(settings, 'auth_key'):
-        app['auth_fernet'] = fernet.Fernet(settings.auth_key)
+    if auth_key:
+        from cryptography import fernet
+        app['auth_fernet'] = fernet.Fernet(auth_key)
 
     app.on_startup.append(startup)
     app.on_cleanup.append(cleanup)
