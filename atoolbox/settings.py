@@ -81,6 +81,11 @@ class BaseSettings(_BaseSettings):
 
         if RedisSettings.__module__ != 'arq.utils':
             raise RuntimeError(f'arq must be installed to use redis, redis_settings set to {v!r}')
+
+        # TODO remove this, it shouldn't be necessary
+        if isinstance(v, RedisSettings):
+            return v
+
         conf = urlparse(v)
         return RedisSettings(
             host=conf.hostname, port=conf.port, password=conf.password, database=int((conf.path or '0').strip('/'))
