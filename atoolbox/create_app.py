@@ -34,7 +34,7 @@ async def startup(app: web.Application):
             app['redis'] = await create_pool_lenient(settings.redis_settings, app.loop)
 
     timeout = getattr(settings, 'http_client_timeout', 30)
-    app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=app.loop)
+    app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout))
 
 
 async def cleanup(app: web.Application):
