@@ -62,7 +62,7 @@ setup(
     ],
     extras_require={
         'all': [
-            'aiohttp-session>=2.6.0',
+            'aiohttp-session>=2.7.0',
             'arq>=0.14',
             'asyncpg>=0.17.0',
             'buildpg>=0.0.2',

@@ -3,6 +3,10 @@
 History
 -------
 
+v0.0.11 (2018-12-23)
+....................
+* uprev aiohttp-session
+
 v0.0.9 (2018-12-16)
 ...................
 * allow settings and redis and postgres to be optional when creating apps
