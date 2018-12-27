@@ -19,7 +19,6 @@ settings_args = dict(
 
 @pytest.fixture(scope='session', name='settings_session')
 def _fix_settings_session():
-    print('calling')
     return Settings(**settings_args)
 
 

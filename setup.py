@@ -55,7 +55,7 @@ setup(
         'aiodns>=1.1.1',
         'aiohttp>=3.4.4',
         'cchardet>=2.1.4',
-        'pydantic>=0.15',
+        'pydantic>=0.17',
         'raven>=6.9.0',
         'raven-aiohttp>=0.7.0',
         'uvloop>=0.11.2',
