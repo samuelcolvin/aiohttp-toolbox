@@ -13,6 +13,7 @@ logger = logging.getLogger('atoolbox.web')
 
 
 async def startup(app: web.Application):
+    loop = asyncio.get_event_loop()
     settings: Optional[BaseSettings] = app['settings']
     # if pg is already set the database doesn't need to be created
     if 'pg' not in app and getattr(settings, 'pg_dsn', None):
@@ -31,10 +32,10 @@ async def startup(app: web.Application):
         except ImportError:
             warnings.warn('arq and aioredis need to be installed to use redis', RuntimeWarning)
         else:
-            app['redis'] = await create_pool_lenient(settings.redis_settings, app.loop)
+            app['redis'] = await create_pool_lenient(settings.redis_settings, loop)
 
     timeout = getattr(settings, 'http_client_timeout', 30)
-    app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=app.loop)
+    app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=loop)
 
 
 async def cleanup(app: web.Application):
