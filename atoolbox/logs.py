@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover
     from pprint import pformat
 
     def format_extra(extra, highlight):
-        pformat(extra)
+        return pformat(extra)
 
 
 # only way to get "extra" from a LogRecord is to look in record.__dict__ and ignore all the standard keys
@@ -50,13 +50,13 @@ standard_record_keys = {
 }
 
 
-class DevWarningHandler(logging.StreamHandler):
+class WarningConsoleHandler(logging.StreamHandler):
     def setFormatter(self, fmt):
         self.formatter = fmt
         self.formatter.stream_is_tty = isatty and isatty(self.stream)
 
 
-class DevWarningFormatter(logging.Formatter):
+class WarningConsoleFormatter(logging.Formatter):
     def __init__(self, fmt=None, datefmt=None, style='%'):
         super().__init__(fmt, datefmt, style)
         self.stream_is_tty = False
@@ -84,7 +84,7 @@ class NotWarnings(logging.Filter):
         return record.levelno < logging.WARNING
 
 
-def get_env_mulitple(*names):
+def get_env_multiple(*names):
     for name in names:
         v = os.getenv(name, None) or os.getenv(name.lower(), None)
         if v:
@@ -111,16 +111,16 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
         client = Client(
             transport=AioHttpTransport,
             dsn=sentry_dsn,
-            release=get_env_mulitple('COMMIT', 'RELEASE'),
-            name=get_env_mulitple('DYNO', 'SERVER_NAME', 'HOSTNAME', 'HOST', 'NAME'),
+            release=get_env_multiple('COMMIT', 'RELEASE'),
+            name=get_env_multiple('DYNO', 'SERVER_NAME', 'HOSTNAME', 'HOST', 'NAME'),
         )
         warning_handler = {'level': 'WARNING', 'class': 'raven.handlers.logging.SentryHandler', 'client': client}
         default_filters = []
     else:
         warning_handler = {
             'level': 'WARNING',
-            'class': 'atoolbox.logs.DevWarningHandler',
-            'formatter': 'atoolbox.warning',
+            'class': 'atoolbox.logs.WarningConsoleHandler',
+            'formatter': 'atoolbox.console_warnings',
         }
         # we don't print above warnings on atoolbox.default to avoid duplicate errors in the console
         default_filters = ['not_warnings']
@@ -131,7 +131,7 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
         'disable_existing_loggers': disable_existing,
         'formatters': {
             'atoolbox.default': {'format': '%(levelname)-7s %(name)19s: %(message)s'},
-            'atoolbox.warning': {'class': 'atoolbox.logs.DevWarningFormatter'},
+            'atoolbox.console_warnings': {'class': 'atoolbox.logs.WarningConsoleFormatter'},
         },
         'filters': {'not_warnings': {'()': 'atoolbox.logs.NotWarnings'}},
         'handlers': {

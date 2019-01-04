@@ -5,7 +5,7 @@ History
 
 v0.1.0 (unreleased)
 ...................
-* improve logging output #4
+* improve logging output #9
 * cleanup cli
 * add commands: ``flush_redis`` and ``check_web``, implement ``wait_for_services`` #7
 
