@@ -12,6 +12,7 @@ from aiohttp.web import Application, run_app
 from pydantic.utils import import_string
 
 from .logs import setup_logging
+from .network import check_server, wait_for_services
 from .settings import BaseSettings
 
 logger = logging.getLogger('atoolbox.cli')
@@ -27,6 +28,7 @@ def command(func: Callable):
 def web(args: List[str], settings: BaseSettings):
     logger.info('running web server at %s...', settings.port)
     create_app: Callable[[BaseSettings], Application] = import_string(settings.create_app)
+    wait_for_services(settings)
     app = create_app(settings=settings)
     run_app(app, port=settings.port, shutdown_timeout=8, access_log=None, print=lambda *args: None)  # pragma: no branch
 
@@ -36,6 +38,7 @@ def worker(args: List[str], settings: BaseSettings):
     if settings.worker_func:
         logger.info('running worker...')
         worker_func: Callable[[BaseSettings], None] = import_string(settings.worker_func)
+        wait_for_services(settings)
         worker_func(settings=settings)
     else:
         raise CliError("settings.worker_path not set, can't run the worker")
@@ -49,6 +52,7 @@ def patch(args: List[str], settings: BaseSettings):
         args.remove('--live')
     from .db.patch import run_patch
 
+    wait_for_services(settings)
     return run_patch(settings, live, args[0] if args else None) or 0
 
 
@@ -57,14 +61,29 @@ def reset_database(args: List[str], settings: BaseSettings):
     logger.info('running reset_database...')
     from .db import reset_database
 
+    wait_for_services(settings)
     reset_database(settings)
+
+
+@command
+def check_web(args: List[str], settings: BaseSettings):
+    url = exp_status = None
+    if args:
+        url = args[0]
+        if len(args) == 2:
+            exp_status = int(args[1])
+
+    url = url or os.getenv('ATOOLBOX_CHECK_URL') or f'http://localhost:{settings.port}/'
+    exp_status = exp_status or int(os.getenv('ATOOLBOX_CHECK_STATUS') or 200)
+    logger.info('checking server is running at "%s" expecting %d...', url, exp_status)
+    return check_server(url, exp_status)
 
 
 class CliError(RuntimeError):
     pass
 
 
-def main(*args):
+def main(*args) -> int:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logging_client = setup_logging()
     sys.path.append(os.getcwd())
@@ -88,11 +107,12 @@ def main(*args):
         except ValueError:
             raise CliError('no command provided, options are: {}'.format(', '.join(commands)))
 
-        func = commands.get(command_name)
-        if not func:
+        try:
+            func = commands[command_name]
+        except KeyError:
             raise CliError('unknown command "{}", options are: {}'.format(command_name, ', '.join(commands)))
-
-        return func(args, settings) or 0
+        else:
+            return func(args, settings) or 0
     except CliError as exc:
         logger.error('%s', exc)
         return 1
