@@ -66,6 +66,13 @@ def reset_database(args: List[str], settings: BaseSettings):
 
 
 @command
+def flush_redis(args: List[str], settings: BaseSettings):
+    from .db.redis import flush_redis
+
+    flush_redis(settings)
+
+
+@command
 def check_web(args: List[str], settings: BaseSettings):
     url = exp_status = None
     if args:

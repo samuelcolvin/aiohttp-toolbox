@@ -54,6 +54,7 @@ setup(
     install_requires=[
         'aiodns>=1.2.0',
         'aiohttp>=3.5.4',
+        'async-timeout>=3.0.1',
         'cchardet>=2.1.4',
         'pydantic>=0.18',
         'raven>=6.10.0',

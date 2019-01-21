@@ -107,3 +107,23 @@ def test_patch_direct_live(caplog, env, db_conn):
 def test_patch_not_found(caplog, env, db_conn):
     assert 1 == cli_main('_', 'patch', 'xxx')
     assert 'patch "xxx" not found in patches: [\'rerun_sql\', \'error_patch\', \'direct_path\']' in caplog.text
+
+
+def test_flush_redis(env):
+    assert 0 == cli_main('_', 'flush_redis')
+
+
+def test_check_server(caplog, env):
+    assert 1 == cli_main('_', 'check_web', 'http://localhost:666/', '234')
+    assert 'checking server is running at "http://localhost:666/" expecting 234...' in caplog.text
+    assert 'ClientConnectorError: Cannot connect to host localhost:666' in caplog.text
+
+
+def test_check_server_url_only(caplog, env):
+    assert 1 == cli_main('_', 'check_web', 'http://localhost:666/')
+    assert 'checking server is running at "http://localhost:666/" expecting 200...' in caplog.text
+
+
+def test_check_server_default_args(caplog, env):
+    assert 1 == cli_main('_', 'check_web')
+    assert 'checking server is running at "http://localhost:8000/" expecting 200...' in caplog.text

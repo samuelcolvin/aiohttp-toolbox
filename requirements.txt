@@ -6,7 +6,7 @@ aiohttp==3.5.4
 aiohttp-session==2.7.0
 arq==0.14
 asyncpg==0.17.0
-async-timeout==3.0.0
+async-timeout==3.0.1
 buildpg==0.0.2
 cchardet==2.1.4
 cryptography==2.4.1

@@ -7,6 +7,7 @@ v0.1.0 (unreleased)
 ...................
 * improve logging output #4
 * cleanup cli
+* add commands: ``flush_redis`` and ``check_web``, implement ``wait_for_services`` #7
 
 v0.0.11 (2018-12-27)
 ....................
