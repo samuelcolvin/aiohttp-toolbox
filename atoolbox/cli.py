@@ -5,23 +5,66 @@ import logging.config
 import os
 import sys
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List
 
 import uvloop
-from aiohttp import web
+from aiohttp.web import Application, run_app
 from pydantic.utils import import_string
 
 from .logs import setup_logging
 from .settings import BaseSettings
 
 logger = logging.getLogger('atoolbox.cli')
+commands = {}
+
+
+def command(func: Callable):
+    commands[func.__name__] = func
+    return func
+
+
+@command
+def web(args: List[str], settings: BaseSettings):
+    logger.info('running web server at %s...', settings.port)
+    create_app: Callable[[BaseSettings], Application] = import_string(settings.create_app)
+    app = create_app(settings=settings)
+    run_app(app, port=settings.port, shutdown_timeout=8, access_log=None, print=lambda *args: None)  # pragma: no branch
+
+
+@command
+def worker(args: List[str], settings: BaseSettings):
+    if settings.worker_func:
+        logger.info('running worker...')
+        worker_func: Callable[[BaseSettings], None] = import_string(settings.worker_func)
+        worker_func(settings=settings)
+    else:
+        raise CliError("settings.worker_path not set, can't run the worker")
+
+
+@command
+def patch(args: List[str], settings: BaseSettings):
+    logger.info('running patch...')
+    live = '--live' in args
+    if live:
+        args.remove('--live')
+    from .db.patch import run_patch
+
+    return run_patch(settings, live, args[0] if args else None) or 0
+
+
+@command
+def reset_database(args: List[str], settings: BaseSettings):
+    logger.info('running reset_database...')
+    from .db import reset_database
+
+    reset_database(settings)
 
 
 class CliError(RuntimeError):
     pass
 
 
-def main(*args):  # noqa: C901 (ignore complexity)
+def main(*args):
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logging_client = setup_logging()
     sys.path.append(os.getcwd())
@@ -41,39 +84,15 @@ def main(*args):  # noqa: C901 (ignore complexity)
         settings = Settings()
         locale.setlocale(locale.LC_ALL, settings.locale)
         try:
-            _, command, *args = args
+            _, command_name, *args = args
         except ValueError:
-            raise CliError('no command provided, options are: "reset_database", "patch", "worker" or "web"')
+            raise CliError('no command provided, options are: {}'.format(', '.join(commands)))
 
-        if command == 'reset_database':
-            logger.info('running reset_database...')
-            from .db import reset_database
+        func = commands.get(command_name)
+        if not func:
+            raise CliError('unknown command "{}", options are: {}'.format(command_name, ', '.join(commands)))
 
-            reset_database(settings)
-        elif command == 'patch':
-            logger.info('running patch...')
-            live = '--live' in args
-            if live:
-                args.remove('--live')
-            from .db.patch import run_patch
-
-            return run_patch(settings, live, args[0] if args else None) or 0
-        elif command == 'web':
-            logger.info('running web server at %s...', settings.port)
-            create_app: Callable = import_string(settings.create_app)
-            app = create_app(settings=settings)
-            web.run_app(  # pragma: no branch
-                app, port=settings.port, shutdown_timeout=8, access_log=None, print=lambda *args: None
-            )
-        elif command == 'worker':
-            if settings.worker_func:
-                logger.info('running worker...')
-                worker: Callable = import_string(settings.worker_func)
-                worker(settings=settings)
-            else:
-                raise CliError("settings.worker_path not set, can't run the worker")
-        else:
-            raise CliError(f'unknown command "{command}"')
+        return func(args, settings) or 0
     except CliError as exc:
         logger.error('%s', exc)
         return 1
@@ -82,11 +101,10 @@ def main(*args):  # noqa: C901 (ignore complexity)
         if logging_client and not loop.is_closed():
             transport = logging_client.remote.get_transport()
             transport and loop.run_until_complete(transport.close())
-    return 0
 
 
 def cli():  # pragma: no cover
-    sys.exit(main(*sys.argv) or 0)
+    sys.exit(main(*sys.argv))
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -3,6 +3,11 @@
 History
 -------
 
+v0.1.0 (unreleased)
+...................
+* improve logging output #4
+* cleanup cli
+
 v0.0.11 (2018-12-27)
 ....................
 * uprev aiohttp-session

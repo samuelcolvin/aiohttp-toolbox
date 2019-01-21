@@ -28,7 +28,7 @@ def mock_run_app(create_app, **kwargs):
 
 
 def test_web(mocker, env):
-    f = mocker.patch('atoolbox.cli.web.run_app')
+    f = mocker.patch('atoolbox.cli.run_app')
     f.side_effect = mock_run_app
     assert 0 == cli_main('_', 'web')
     assert f.called
