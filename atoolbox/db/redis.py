@@ -1,11 +1,11 @@
 import asyncio
 
-from arq import create_pool_lenient
-
 from .. import BaseSettings
 
 
 async def async_flush_redis(settings: BaseSettings, loop):
+    from arq import create_pool_lenient
+
     redis = await create_pool_lenient(settings.redis_settings, loop=loop)
     await redis.flushdb()
     redis.close()
