@@ -14,6 +14,10 @@ Requires **python 3.6** or **python 3.7**.
 
     pip install aiohttp-toolbox
 
+To test:
+
+
+
 .. |BuildStatus| image:: https://travis-ci.org/samuelcolvin/aiohttp-toolbox.svg?branch=master
    :target: https://travis-ci.org/samuelcolvin/aiohttp-toolbox
 .. |Coverage| image:: https://codecov.io/gh/samuelcolvin/aiohttp-toolbox/branch/master/graph/badge.svg

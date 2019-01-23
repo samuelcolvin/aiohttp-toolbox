@@ -3,7 +3,11 @@ import logging.config
 import os
 import sys
 import traceback
+from datetime import datetime, timedelta
 from io import StringIO
+
+from aiohttp.abc import AbstractAccessLogger
+from aiohttp.hdrs import METH_POST
 
 try:
     import pygments
@@ -16,14 +20,49 @@ else:
 
 try:
     from devtools import pformat as format_extra
-    from devtools.ansi import isatty
+    from devtools.ansi import isatty, sformat
 except ImportError:  # pragma: no cover
     from pprint import pformat
 
     isatty = False
+    sformat = None
 
     def format_extra(extra, highlight):
         return pformat(extra)
+
+
+class ColouredAccessLogger(AbstractAccessLogger):
+    def log(self, request, response, time):
+        msg = '{method} {path} {code} {size} {ms:0.0f}ms'.format(
+            method=request.method,
+            path=request.path,
+            code=response.status,
+            size=self.fmt_size(response.body_length),
+            ms=time * 1000,
+        )
+        time_str = (datetime.now() - timedelta(seconds=time)).strftime('[%H:%M:%S]')
+        if sformat:
+            time_str = sformat(time_str, sformat.magenta)
+
+            if response.status >= 500:
+                msg = sformat(msg, sformat.red)
+            elif response.status >= 400:
+                msg = sformat(msg, sformat.yellow)
+            elif response.status == 304:
+                msg = sformat(msg, sformat.dim)
+            elif request.method == METH_POST:
+                msg = sformat(msg, sformat.green)
+
+        self.logger.info(time_str + ' ' + msg)
+
+    @staticmethod
+    def fmt_size(num):
+        if not num:
+            return ''
+        if num < 1024:
+            return '{:0.0f}B'.format(num)
+        else:
+            return '{:0.1f}KB'.format(num / 1024)
 
 
 # only way to get "extra" from a LogRecord is to look in record.__dict__ and ignore all the standard keys
@@ -52,7 +91,7 @@ standard_record_keys = {
 }
 
 
-class IsTTYStreamHandler(logging.StreamHandler):
+class HighlightStreamHandler(logging.StreamHandler):
     def setFormatter(self, fmt):
         self.formatter = fmt
         self.formatter.stream_is_tty = isatty and isatty(self.stream)
@@ -121,7 +160,7 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
     else:
         warning_handler = {
             'level': 'WARNING',
-            'class': 'atoolbox.logs.IsTTYStreamHandler',
+            'class': 'atoolbox.logs.HighlightStreamHandler',
             'formatter': 'atoolbox.highlighted_formatter',
         }
         # we don't print above warnings on atoolbox.default to avoid duplicate errors in the console
@@ -132,11 +171,17 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
         'version': 1,
         'disable_existing_loggers': disable_existing,
         'formatters': {
+            'atoolbox.simple_formatter': {'format': '%(message)s'},
             'atoolbox.default_formatter': {'format': '%(levelname)-7s %(name)19s: %(message)s'},
             'atoolbox.highlighted_formatter': {'class': 'atoolbox.logs.HighlightExtraFormatter'},
         },
         'filters': {'not_warnings': {'()': 'atoolbox.logs.NotWarnings'}},
         'handlers': {
+            'atoolbox.simple': {
+                'level': log_level,
+                'class': 'logging.StreamHandler',
+                'formatter': 'atoolbox.simple_formatter',
+            },
             'atoolbox.default': {
                 'level': log_level,
                 'class': 'logging.StreamHandler',
@@ -147,6 +192,7 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
         },
         'loggers': {
             'atoolbox': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
+            'aiohttp.access': {'handlers': ['atoolbox.simple', 'atoolbox.warning'], 'level': log_level},
             main_logger_name: {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
             'arq': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
         },
