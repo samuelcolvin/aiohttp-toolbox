@@ -31,13 +31,17 @@ except ImportError:  # pragma: no cover
         return pformat(extra)
 
 
+MB = 1024 ** 2
+KB = 1024
+
+
 class ColouredAccessLogger(AbstractAccessLogger):
     def log(self, request, response, time):
         msg = '{method} {path} {code} {size} {ms:0.0f}ms'.format(
             method=request.method,
             path=request.path,
             code=response.status,
-            size=self.fmt_size(response.body_length),
+            size=self.format_size(response.body_length),
             ms=time * 1000,
         )
         time_str = (datetime.now() - timedelta(seconds=time)).strftime('[%H:%M:%S]')
@@ -56,13 +60,13 @@ class ColouredAccessLogger(AbstractAccessLogger):
         self.logger.info(time_str + ' ' + msg)
 
     @staticmethod
-    def fmt_size(num):
-        if not num:
-            return ''
-        if num < 1024:
-            return '{:0.0f}B'.format(num)
+    def format_size(num):
+        if num >= MB:
+            return '{:0.1f}MB'.format(num / MB)
+        elif num >= KB:
+            return '{:0.1f}KB'.format(num / KB)
         else:
-            return '{:0.1f}KB'.format(num / 1024)
+            return '{:0.0f}B'.format(num)
 
 
 # only way to get "extra" from a LogRecord is to look in record.__dict__ and ignore all the standard keys
