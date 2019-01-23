@@ -20,6 +20,8 @@ try:
 except ImportError:  # pragma: no cover
     from pprint import pformat
 
+    isatty = False
+
     def format_extra(extra, highlight):
         return pformat(extra)
 
@@ -50,13 +52,13 @@ standard_record_keys = {
 }
 
 
-class WarningConsoleHandler(logging.StreamHandler):
+class IsTTYStreamHandler(logging.StreamHandler):
     def setFormatter(self, fmt):
         self.formatter = fmt
         self.formatter.stream_is_tty = isatty and isatty(self.stream)
 
 
-class WarningConsoleFormatter(logging.Formatter):
+class HighlightExtraFormatter(logging.Formatter):
     def __init__(self, fmt=None, datefmt=None, style='%'):
         super().__init__(fmt, datefmt, style)
         self.stream_is_tty = False
@@ -119,8 +121,8 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
     else:
         warning_handler = {
             'level': 'WARNING',
-            'class': 'atoolbox.logs.WarningConsoleHandler',
-            'formatter': 'atoolbox.console_warnings',
+            'class': 'atoolbox.logs.IsTTYStreamHandler',
+            'formatter': 'atoolbox.highlighted_formatter',
         }
         # we don't print above warnings on atoolbox.default to avoid duplicate errors in the console
         default_filters = ['not_warnings']
@@ -130,15 +132,15 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
         'version': 1,
         'disable_existing_loggers': disable_existing,
         'formatters': {
-            'atoolbox.default': {'format': '%(levelname)-7s %(name)19s: %(message)s'},
-            'atoolbox.console_warnings': {'class': 'atoolbox.logs.WarningConsoleFormatter'},
+            'atoolbox.default_formatter': {'format': '%(levelname)-7s %(name)19s: %(message)s'},
+            'atoolbox.highlighted_formatter': {'class': 'atoolbox.logs.HighlightExtraFormatter'},
         },
         'filters': {'not_warnings': {'()': 'atoolbox.logs.NotWarnings'}},
         'handlers': {
             'atoolbox.default': {
                 'level': log_level,
                 'class': 'logging.StreamHandler',
-                'formatter': 'atoolbox.default',
+                'formatter': 'atoolbox.default_formatter',
                 'filters': default_filters,
             },
             'atoolbox.warning': warning_handler,
