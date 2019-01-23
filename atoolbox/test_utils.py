@@ -7,8 +7,10 @@ from aiohttp.web_middlewares import middleware
 from aiohttp.web_response import Response, json_response
 
 
-async def return_200(request):
-    return Response()
+async def return_any_status(request):
+    status = int(request.match_info['status'])
+    # TODO how do we deal with 301 extra which should have the "Location" header
+    return Response(text=f'test response with status {status}', status=status)
 
 
 async def grecaptcha(request):
@@ -30,7 +32,9 @@ async def log_middleware(request, handler):
 
 def create_dummy_app() -> Application:
     app = web.Application(middlewares=(log_middleware,))
-    app.add_routes([web.route('*', '/200/', return_200), web.post('/grecaptcha_url/', grecaptcha)])
+    app.add_routes(
+        [web.route('*', r'/status/{status:\d+}/', return_any_status), web.post(r'/grecaptcha_url/', grecaptcha)]
+    )
     app['log'] = []
     return app
 

@@ -71,8 +71,20 @@ class BaseSettings(_BaseSettings):
         return self.sql_path.read_text()
 
     @property
+    def _pg_dsn_parsed(self):
+        return urlparse(self.pg_dsn)
+
+    @property
     def pg_name(self):
-        return urlparse(self.pg_dsn).path.lstrip('/')
+        return self._pg_dsn_parsed.path.lstrip('/')
+
+    @property
+    def pg_host(self):
+        return self._pg_dsn_parsed.hostname
+
+    @property
+    def pg_port(self):
+        return self._pg_dsn_parsed.port
 
     @validator('redis_settings', always=True, pre=True)
     def parse_redis_settings(cls, v):
