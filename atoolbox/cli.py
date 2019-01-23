@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.6
 import asyncio
 import locale
-import logging.config
+import logging
 import os
 import sys
 from pathlib import Path
@@ -32,9 +32,9 @@ def web(args: List[str], settings: BaseSettings):
     app = create_app(settings=settings)
     kwargs = dict(port=settings.port, shutdown_timeout=8, print=lambda *args: None)  # pragma: no branch
     if '--access-log' in args:
-        kwargs['access_log_class'] = ColouredAccessLogger
+        kwargs.update(access_log_class=ColouredAccessLogger, access_log=logging.getLogger('atoolbox.access'))
     else:
-        access_log = None
+        kwargs['access_log'] = None
     run_app(app, **kwargs)
 
 

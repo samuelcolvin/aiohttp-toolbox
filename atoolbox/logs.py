@@ -192,7 +192,7 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
         },
         'loggers': {
             'atoolbox': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
-            'aiohttp.access': {'handlers': ['atoolbox.simple', 'atoolbox.warning'], 'level': log_level},
+            'atoolbox.access': {'handlers': ['atoolbox.simple'], 'level': log_level},
             main_logger_name: {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
             'arq': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
         },

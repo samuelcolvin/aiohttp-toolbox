@@ -14,9 +14,10 @@ Requires **python 3.6** or **python 3.7**.
 
     pip install aiohttp-toolbox
 
-To test:
+To test::
 
-
+   export ATOOLBOX_ROOT_DIR=./tests/demo
+   atoolbox web
 
 .. |BuildStatus| image:: https://travis-ci.org/samuelcolvin/aiohttp-toolbox.svg?branch=master
    :target: https://travis-ci.org/samuelcolvin/aiohttp-toolbox

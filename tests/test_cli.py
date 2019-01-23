@@ -9,6 +9,7 @@ from atoolbox.cli import main as cli_main
 
 @pytest.fixture(name='env')
 def env_fixture():
+    os.environ.pop('ATOOLBOX_ROOT_DIR', None)
     os.environ['ATOOLBOX_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
     os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
