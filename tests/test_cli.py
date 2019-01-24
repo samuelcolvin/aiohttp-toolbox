@@ -32,7 +32,16 @@ def test_web(mocker, env):
     f = mocker.patch('atoolbox.cli.run_app')
     f.side_effect = mock_run_app
     assert 0 == cli_main('_', 'web')
-    assert f.called
+    f.assert_called_once()
+    assert f.call_args[1].keys() == {'port', 'shutdown_timeout', 'print', 'access_log'}
+
+
+def test_web_logger(mocker, env):
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 0 == cli_main('_', 'web', '--access-log')
+    f.assert_called_once()
+    assert f.call_args[1].keys() == {'port', 'shutdown_timeout', 'print', 'access_log', 'access_log_class'}
 
 
 def test_args_error(caplog, env):

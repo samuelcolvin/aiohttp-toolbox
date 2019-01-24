@@ -99,6 +99,7 @@ class HighlightStreamHandler(logging.StreamHandler):
     def setFormatter(self, fmt):
         self.formatter = fmt
         self.formatter.stream_is_tty = isatty and isatty(self.stream)
+        debug(self.formatter.stream_is_tty, isatty)
 
 
 class HighlightExtraFormatter(logging.Formatter):
@@ -136,7 +137,7 @@ def get_env_multiple(*names):
             return v
 
 
-def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
+def build_logging_config(debug=None, disable_existing=False, main_logger_name=None):
     """
     setup logging config by updating the arq logging config
     """
@@ -201,5 +202,10 @@ def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
             'arq': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
         },
     }
+    return config, client
+
+
+def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
+    config, client = build_logging_config(debug, disable_existing, main_logger_name)
     logging.config.dictConfig(config)
     return client
