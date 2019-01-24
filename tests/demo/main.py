@@ -5,6 +5,7 @@ from pydantic import BaseModel, constr
 from atoolbox import create_default_app, parse_request_json
 from atoolbox.auth import check_grecaptcha
 from atoolbox.bread import Bread, ExecView
+from atoolbox.test_utils import return_any_status
 from atoolbox.utils import JsonErrors, decrypt_json, encrypt_json, json_response
 
 
@@ -91,6 +92,7 @@ async def get_user(request):
 async def create_app(settings):
     routes = [
         web.get('/', handle_200),
+        web.route('*', r'/status/{status:\d+}/', return_any_status),
         web.get('/user', handle_user),
         web.get('/errors/{do}', handle_errors),
         web.post('/exec/', TestExecView.view()),

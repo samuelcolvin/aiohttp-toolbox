@@ -9,6 +9,7 @@ from atoolbox.cli import main as cli_main
 
 @pytest.fixture(name='env')
 def env_fixture():
+    os.environ.pop('ATOOLBOX_ROOT_DIR', None)
     os.environ['ATOOLBOX_SETTINGS'] = 'demo.settings.Settings'
     os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
     os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
@@ -31,7 +32,16 @@ def test_web(mocker, env):
     f = mocker.patch('atoolbox.cli.run_app')
     f.side_effect = mock_run_app
     assert 0 == cli_main('_', 'web')
-    assert f.called
+    f.assert_called_once()
+    assert f.call_args[1].keys() == {'port', 'shutdown_timeout', 'print', 'access_log'}
+
+
+def test_web_logger(mocker, env):
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 0 == cli_main('_', 'web', '--access-log')
+    f.assert_called_once()
+    assert f.call_args[1].keys() == {'port', 'shutdown_timeout', 'print', 'access_log', 'access_log_class'}
 
 
 def test_args_error(caplog, env):

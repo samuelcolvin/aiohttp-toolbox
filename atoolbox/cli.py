@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.6
 import asyncio
 import locale
-import logging.config
+import logging
 import os
 import sys
 from pathlib import Path
@@ -11,7 +11,7 @@ import uvloop
 from aiohttp.web import Application, run_app
 from pydantic.utils import import_string
 
-from .logs import setup_logging
+from .logs import ColouredAccessLogger, setup_logging
 from .network import check_server, wait_for_services
 from .settings import BaseSettings
 
@@ -30,7 +30,12 @@ def web(args: List[str], settings: BaseSettings):
     create_app: Callable[[BaseSettings], Application] = import_string(settings.create_app)
     wait_for_services(settings)
     app = create_app(settings=settings)
-    run_app(app, port=settings.port, shutdown_timeout=8, access_log=None, print=lambda *args: None)  # pragma: no branch
+    kwargs = dict(port=settings.port, shutdown_timeout=8, print=lambda *args: None)  # pragma: no branch
+    if '--access-log' in args:
+        kwargs.update(access_log_class=ColouredAccessLogger, access_log=logging.getLogger('atoolbox.access'))
+    else:
+        kwargs['access_log'] = None
+    run_app(app, **kwargs)
 
 
 @command
