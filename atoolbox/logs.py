@@ -99,7 +99,6 @@ class HighlightStreamHandler(logging.StreamHandler):
     def setFormatter(self, fmt):
         self.formatter = fmt
         self.formatter.stream_is_tty = isatty and isatty(self.stream)
-        debug(self.formatter.stream_is_tty, isatty)
 
 
 class HighlightExtraFormatter(logging.Formatter):
