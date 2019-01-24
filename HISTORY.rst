@@ -3,7 +3,7 @@
 History
 -------
 
-v0.1.0 (unreleased)
+v0.1.0 (2019-01-24)
 ...................
 * improve logging output #9
 * cleanup cli
