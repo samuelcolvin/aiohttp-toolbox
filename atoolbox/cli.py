@@ -4,8 +4,9 @@ import locale
 import logging
 import os
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable
 
 import uvloop
 from aiohttp.web import Application, run_app
@@ -25,13 +26,13 @@ def command(func: Callable):
 
 
 @command
-def web(args: List[str], settings: BaseSettings):
+def web(args, settings: BaseSettings):
     logger.info('running web server at %s...', settings.port)
     create_app: Callable[[BaseSettings], Application] = import_string(settings.create_app)
     wait_for_services(settings)
     app = create_app(settings=settings)
     kwargs = dict(port=settings.port, shutdown_timeout=8, print=lambda *args: None)  # pragma: no branch
-    if '--access-log' in args:
+    if args.access_log:
         kwargs.update(access_log_class=ColouredAccessLogger, access_log=logging.getLogger('atoolbox.access'))
     else:
         kwargs['access_log'] = None
@@ -39,7 +40,7 @@ def web(args: List[str], settings: BaseSettings):
 
 
 @command
-def worker(args: List[str], settings: BaseSettings):
+def worker(args, settings: BaseSettings):
     if settings.worker_func:
         logger.info('running worker...')
         worker_func: Callable[[BaseSettings], None] = import_string(settings.worker_func)
@@ -50,19 +51,16 @@ def worker(args: List[str], settings: BaseSettings):
 
 
 @command
-def patch(args: List[str], settings: BaseSettings):
+def patch(args, settings: BaseSettings):
     logger.info('running patch...')
-    live = '--live' in args
-    if live:
-        args.remove('--live')
     from .db.patch import run_patch
 
     wait_for_services(settings)
-    return run_patch(settings, live, args[0] if args else None) or 0
+    return run_patch(settings, args.live, args.extra[0] if args.extra else None) or 0
 
 
 @command
-def reset_database(args: List[str], settings: BaseSettings):
+def reset_database(args, settings: BaseSettings):
     logger.info('running reset_database...')
     from .db import reset_database
 
@@ -71,19 +69,19 @@ def reset_database(args: List[str], settings: BaseSettings):
 
 
 @command
-def flush_redis(args: List[str], settings: BaseSettings):
+def flush_redis(args, settings: BaseSettings):
     from .db.redis import flush_redis
 
     flush_redis(settings)
 
 
 @command
-def check_web(args: List[str], settings: BaseSettings):
+def check_web(args, settings: BaseSettings):
     url = exp_status = None
-    if args:
-        url = args[0]
-        if len(args) == 2:
-            exp_status = int(args[1])
+    if args.extra:
+        url = args.extra[0]
+        if len(args.extra) == 2:
+            exp_status = int(args.extra[1])
 
     url = url or os.getenv('ATOOLBOX_CHECK_URL') or f'http://localhost:{settings.port}/'
     exp_status = exp_status or int(os.getenv('ATOOLBOX_CHECK_STATUS') or 200)
@@ -96,35 +94,62 @@ class CliError(RuntimeError):
 
 
 def main(*args) -> int:
+    parser = ArgumentParser(description='aiohttp-toolbox command line interface')
+    parser.add_argument('command', type=str, choices=list(commands.keys()), help='The command to run')
+    parser.add_argument(
+        '--root',
+        dest='root',
+        default=os.getenv('ATOOLBOX_ROOT_DIR', '.'),
+        help=(
+            'root directory to run the command from, defaults to to the environment variable '
+            '"ATOOLBOX_ROOT_DIR" or "."'
+        ),
+    )
+    parser.add_argument(
+        '--settings-path',
+        dest='settings_path',
+        default=os.getenv('ATOOLBOX_SETTINGS', 'settings.Settings'),
+        help=(
+            'settings path (dotted, relative to the root directory), defaults to to the environment variable '
+            '"ATOOLBOX_SETTINGS" or "settings.Settings"'
+        ),
+    )
+    parser.add_argument(
+        '--live', action='store_true', help='whether to run patches as live, default false, only applies to "patch".'
+    )
+    parser.add_argument(
+        '--access-log',
+        dest='access_log',
+        action='store_true',
+        help='whether run the access logger on web, default false, only applies to "web".',
+    )
+    parser.add_argument('extra', nargs='*', default=[], help='Extra arguments to pass to the command.')
+    try:
+        ns = parser.parse_args(args)
+    except SystemExit:
+        return 1
+
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logging_client = setup_logging()
     sys.path.append(os.getcwd())
     try:
-        root_dir = Path(os.getenv('ATOOLBOX_ROOT_DIR', '.')).resolve()
-        sys.path.append(str(root_dir))
-        os.chdir(str(root_dir))
-        settings_str = os.getenv('ATOOLBOX_SETTINGS', 'settings.Settings')
+        root_dir = str(Path(ns.root).resolve())
+        sys.path.append(root_dir)
+        os.chdir(root_dir)
+
         try:
-            Settings = import_string(settings_str)
+            settings_cls = import_string(ns.settings_path)
         except (ModuleNotFoundError, ImportError) as exc:
-            raise CliError(f'unable to import "{settings_str}", {exc.__class__.__name__}: {exc}')
+            raise CliError(f'unable to import "{ns.settings_path}", {exc.__class__.__name__}: {exc}')
 
-        if not isinstance(Settings, type) or not issubclass(Settings, BaseSettings):
-            raise CliError(f'settings "{Settings}" (from "{settings_str}"), is not a valid Settings class')
+        if not isinstance(settings_cls, type) or not issubclass(settings_cls, BaseSettings):
+            raise CliError(f'settings "{settings_cls}" (from "{ns.settings_path}"), is not a valid Settings class')
 
-        settings = Settings()
+        settings = settings_cls()
         locale.setlocale(locale.LC_ALL, settings.locale)
-        try:
-            _, command_name, *args = args
-        except ValueError:
-            raise CliError('no command provided, options are: {}'.format(', '.join(commands)))
 
-        try:
-            func = commands[command_name]
-        except KeyError:
-            raise CliError('unknown command "{}", options are: {}'.format(command_name, ', '.join(commands)))
-        else:
-            return func(args, settings) or 0
+        func = commands[ns.command]
+        return func(ns, settings) or 0
     except CliError as exc:
         logger.error('%s', exc)
         return 1
@@ -136,7 +161,7 @@ def main(*args) -> int:
 
 
 def cli():  # pragma: no cover
-    sys.exit(main(*sys.argv))
+    sys.exit(main(*sys.argv[1:]))
 
 
 if __name__ == '__main__':  # pragma: no cover
