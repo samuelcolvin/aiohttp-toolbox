@@ -30,7 +30,7 @@ test:
 
 .PHONY: test-minimal
 test-minimal:
-	pytest tests/minimal_tests.py --cov=atoolbox
+	pytest minimal_tests.py --cov=atoolbox
 
 .PHONY: testcov
 testcov:
