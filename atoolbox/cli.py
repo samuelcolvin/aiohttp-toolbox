@@ -11,6 +11,7 @@ from typing import Callable
 import uvloop
 from aiohttp.web import Application, run_app
 from pydantic.utils import import_string
+from pydantic import BaseSettings as PydanticBaseSettings
 
 from .logs import ColouredAccessLogger, setup_logging
 from .network import check_server, wait_for_services
@@ -115,13 +116,15 @@ def main(*args) -> int:
         ),
     )
     parser.add_argument(
-        '--live', action='store_true', help='whether to run patches as live, default false, only applies to "patch".'
+        '--live',
+        action='store_true',
+        help='whether to run patches as live, default false, only applies to the "patch" command.'
     )
     parser.add_argument(
         '--access-log',
         dest='access_log',
         action='store_true',
-        help='whether run the access logger on web, default false, only applies to "web".',
+        help='whether run the access logger on web, default false, only applies to the "web" command.',
     )
     parser.add_argument('extra', nargs='*', default=[], help='Extra arguments to pass to the command.')
     try:
@@ -131,8 +134,8 @@ def main(*args) -> int:
 
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logging_client = setup_logging()
-    sys.path.append(os.getcwd())
     try:
+        sys.path.append(os.getcwd())
         root_dir = str(Path(ns.root).resolve())
         sys.path.append(root_dir)
         os.chdir(root_dir)
@@ -142,11 +145,11 @@ def main(*args) -> int:
         except (ModuleNotFoundError, ImportError) as exc:
             raise CliError(f'unable to import "{ns.settings_path}", {exc.__class__.__name__}: {exc}')
 
-        if not isinstance(settings_cls, type) or not issubclass(settings_cls, BaseSettings):
+        if not isinstance(settings_cls, type) or not issubclass(settings_cls, PydanticBaseSettings):
             raise CliError(f'settings "{settings_cls}" (from "{ns.settings_path}"), is not a valid Settings class')
 
         settings = settings_cls()
-        locale.setlocale(locale.LC_ALL, settings.locale)
+        locale.setlocale(locale.LC_ALL, getattr(settings, 'locale', 'en_US.utf8'))
 
         func = commands[ns.command]
         return func(ns, settings) or 0

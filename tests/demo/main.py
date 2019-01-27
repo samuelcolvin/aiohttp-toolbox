@@ -4,7 +4,8 @@ from pydantic import BaseModel, constr
 
 from atoolbox import create_default_app, parse_request_json
 from atoolbox.auth import check_grecaptcha
-from atoolbox.bread import Bread, ExecView
+from atoolbox.bread import Bread
+from atoolbox.class_views import ExecView
 from atoolbox.test_utils import return_any_status
 from atoolbox.utils import JsonErrors, decrypt_json, encrypt_json, json_response
 

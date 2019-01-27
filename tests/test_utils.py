@@ -145,7 +145,7 @@ async def test_create_app_no_settings(mocker):
     assert len(app.middlewares) == 3
 
     await startup(app)
-    assert 'http_client' in app
+    assert 'http_client' not in app
     assert 'pg' not in app
     assert 'redis' not in app
     await cleanup(app)
@@ -162,13 +162,16 @@ async def test_create_app_pg(mocker):
 
     class Settings(PydanticBaseSettings):
         pg_dsn: str = 'postgres://postgres@localhost:5432/atoolbox_test'
+        create_http_client = True
 
     app = await create_default_app(settings=Settings())
     assert app['settings'] is not None
+    assert 'http_client' not in app
 
     await startup(app)
     await cleanup(app)
     assert f.called
+    assert 'http_client' in app
 
 
 async def test_redis_settings_module():

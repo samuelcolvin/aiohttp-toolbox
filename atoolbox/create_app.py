@@ -15,6 +15,8 @@ logger = logging.getLogger('atoolbox.web')
 async def startup(app: web.Application):
     loop = asyncio.get_event_loop()
     settings: Optional[BaseSettings] = app['settings']
+    if not settings:
+        return
     # if pg is already set the database doesn't need to be created
     if 'pg' not in app and getattr(settings, 'pg_dsn', None):
         try:
@@ -26,7 +28,7 @@ async def startup(app: web.Application):
             await prepare_database(settings, False)
             app['pg'] = await asyncpg.create_pool_b(dsn=settings.pg_dsn, min_size=2)
 
-    if getattr(settings, 'redis_settings', None):
+    if 'redis' not in app and getattr(settings, 'redis_settings', None):
         try:
             from arq import create_pool_lenient
         except ImportError:
@@ -34,12 +36,16 @@ async def startup(app: web.Application):
         else:
             app['redis'] = await create_pool_lenient(settings.redis_settings, loop)
 
-    timeout = getattr(settings, 'http_client_timeout', 30)
-    app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=loop)
+    if getattr(settings, 'create_http_client', False):
+        timeout = getattr(settings, 'http_client_timeout', 30)
+        app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=loop)
 
 
 async def cleanup(app: web.Application):
-    close_coros = [app['http_client'].close()]
+    close_coros = []
+    http_client = app.get('http_client')
+    if http_client:
+        close_coros.append(http_client.close())
 
     redis = app.get('redis')
     if redis and not redis.closed:
@@ -52,14 +58,8 @@ async def cleanup(app: web.Application):
 
     await asyncio.gather(*close_coros)
 
-    logging_client = app['logging_client']
-    transport = logging_client and logging_client.remote.get_transport()
-    transport and await transport.close()
 
-
-async def create_default_app(*, settings: BaseSettings = None, logging_client=None, middleware=None, routes=None):
-    logging_client = logging_client or setup_logging()
-
+async def create_default_app(*, settings: BaseSettings = None, middleware=None, routes=None):
     auth_key = getattr(settings, 'auth_key', None)
     if not middleware:
         middleware = (error_middleware, pg_middleware, csrf_middleware)
@@ -79,9 +79,9 @@ async def create_default_app(*, settings: BaseSettings = None, logging_client=No
     if hasattr(settings, 'max_request_size'):
         kwargs['client_max_size'] = settings.max_request_size
 
-    app = web.Application(logger=None, middlewares=middleware, **kwargs)
+    app = web.Application(middlewares=middleware, **kwargs)
 
-    app.update(settings=settings, logging_client=logging_client)
+    app['settings'] = settings
     if auth_key:
         try:
             from cryptography import fernet

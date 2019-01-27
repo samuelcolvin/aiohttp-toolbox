@@ -52,9 +52,10 @@ class BaseSettings(_BaseSettings):
     auth_key: str = auth_key_default
 
     max_request_size = 10 * 1024 ** 2  # 10MB
-    locale = 'en_GB.utf8'
+    locale = 'en_US.utf8'
 
     http_client_timeout = 10
+    create_http_client = True
 
     csrf_ignore_paths: List[Pattern] = []
     csrf_upload_paths: List[Pattern] = []

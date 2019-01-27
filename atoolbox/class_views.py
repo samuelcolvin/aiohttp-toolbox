@@ -6,7 +6,7 @@ from aiohttp import web
 from buildpg.asyncpg import BuildPgConnection
 from pydantic import BaseModel
 
-from ..utils import json_response, parse_request_json
+from .utils import json_response, parse_request_json
 
 
 class View:
