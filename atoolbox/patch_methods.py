@@ -1,27 +1,29 @@
 import asyncio
 import logging
-from typing import Callable, NamedTuple
+from dataclasses import dataclass
+from typing import Callable, Tuple
 
-from ..settings import BaseSettings
-from .connection import lenient_conn
+from .db.connection import lenient_conn
+from .settings import BaseSettings
 
-logger = logging.getLogger('atoolbox.db.patch')
+logger = logging.getLogger('atoolbox.patch')
 patches = []
 
 
-class Patch(NamedTuple):
+@dataclass
+class Patch:
     func: Callable
     direct: bool = False
 
 
-def run_patch(settings: BaseSettings, live, patch_name):
+def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[str, ...]):
     if patch_name is None:
         logger.info(
             'available patches:\n{}'.format(
                 '\n'.join('  {}: {}'.format(p.func.__name__, p.func.__doc__.strip('\n ')) for p in patches)
             )
         )
-        return
+        return 0
     patch_lookup = {p.func.__name__: p for p in patches}
     try:
         patch = patch_lookup[patch_name]
@@ -37,10 +39,10 @@ def run_patch(settings: BaseSettings, live, patch_name):
     else:
         logger.info(f'running patch {patch_name} live {live}')
     loop = asyncio.get_event_loop()
-    return loop.run_until_complete(_run_patch(settings, live, patch))
+    return loop.run_until_complete(_run_patch(settings, patch, live, args)) or 0
 
 
-async def _run_patch(settings, live, patch: Patch):
+async def _run_patch(settings, patch: Patch, live: bool, args: Tuple[str, ...]):
     conn = await lenient_conn(settings)
     tr = None
     if not patch.direct:
@@ -48,7 +50,12 @@ async def _run_patch(settings, live, patch: Patch):
         await tr.start()
     logger.info('=' * 40)
     try:
-        await patch.func(conn, settings=settings, live=live)
+        if asyncio.iscoroutinefunction(patch.func):
+            result = await patch.func(conn=conn, settings=settings, live=live, args=args)
+        else:
+            result = patch.func(conn=conn, settings=settings, live=live, args=args)
+        if result is not None:
+            logger.info('result: %s', result)
     except BaseException:
         logger.info('=' * 40)
         logger.exception('Error running %s patch', patch.func.__name__)
@@ -74,13 +81,11 @@ def patch(*args, direct=False):
     if args:
         assert len(args) == 1, 'wrong arguments to patch'
         func = args[0]
-        assert asyncio.iscoroutinefunction(func), f'"{func} is not a coroutine'
         patches.append(Patch(func=func))
         return func
     else:
 
         def wrapper(func):
-            assert asyncio.iscoroutinefunction(func), f'"{func} is not a coroutine'
             patches.append(Patch(func=func, direct=direct))
             return func
 
@@ -88,7 +93,7 @@ def patch(*args, direct=False):
 
 
 @patch
-async def rerun_sql(conn, settings, **kwargs):
+async def rerun_sql(*, conn, settings, **kwargs):
     """
     rerun the contents of settings.sql_path. WARNING: depending on how you've written your sql this may be dangerous.
     """

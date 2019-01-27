@@ -56,6 +56,7 @@ setup(
         'aiohttp>=3.5.4',
         'async-timeout>=3.0.1',
         'cchardet>=2.1.4',
+        'dataclasses>=0.6;python_version<"3.7"',
         'pydantic>=0.18',
         'raven>=6.10.0',
         'raven-aiohttp>=0.7.0',

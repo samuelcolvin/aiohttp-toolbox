@@ -112,11 +112,21 @@ def test_patch_direct_not_live(caplog, env, db_conn):
 def test_patch_direct_live(caplog, env, db_conn):
     assert 0 == cli_main('patch', 'direct_path', '--live')
     assert 'running patch direct_path direct' in caplog.text
+    assert 'result' not in caplog.text
+
+
+def test_patch_func_returns(caplog, env, db_conn):
+    assert 0 == cli_main('patch', 'non_coro', 'foo', 'bar', 'spam')
+    assert 'running patch non_coro live False' in caplog.text
+    assert 'result: 3' in caplog.text
 
 
 def test_patch_not_found(caplog, env, db_conn):
     assert 1 == cli_main('patch', 'xxx')
-    assert 'patch "xxx" not found in patches: [\'rerun_sql\', \'error_patch\', \'direct_path\']' in caplog.text
+    assert (
+        'patch "xxx" not found in patches: [\'rerun_sql\', \'error_patch\', \'direct_path\', \'non_coro\']'
+        in caplog.text
+    )
 
 
 def test_flush_redis(env):

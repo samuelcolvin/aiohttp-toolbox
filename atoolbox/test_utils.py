@@ -1,4 +1,5 @@
-from typing import List, NamedTuple
+from dataclasses import dataclass
+from typing import List
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
@@ -39,7 +40,8 @@ def create_dummy_app() -> Application:
     return app
 
 
-class DummyServer(NamedTuple):
+@dataclass
+class DummyServer:
     server: TestServer
     app: Application
     log: List

@@ -1,7 +1,6 @@
 from typing import List, Pattern
 
-from atoolbox import BaseSettings
-from atoolbox.db.patch import patch
+from atoolbox import BaseSettings, patch
 
 
 class Settings(BaseSettings):
@@ -11,7 +10,7 @@ class Settings(BaseSettings):
 
 
 @patch
-async def error_patch(conn, settings, **kwargs):
+async def error_patch(*, conn, settings, **kwargs):
     """
     Patch which throws an error
     """
@@ -19,8 +18,16 @@ async def error_patch(conn, settings, **kwargs):
 
 
 @patch(direct=True)
-async def direct_path(conn, settings, **kwargs):
+async def direct_path(*, conn, settings, **kwargs):
     """
     this is a "direct" patch
     """
     pass
+
+
+@patch
+def non_coro(*, conn, settings, args, **kwargs):
+    """
+    this is not a coroutine.
+    """
+    return len(args)

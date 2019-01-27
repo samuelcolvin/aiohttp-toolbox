@@ -54,10 +54,16 @@ def worker(args, settings: BaseSettings):
 @command
 def patch(args, settings: BaseSettings):
     logger.info('running patch...')
-    from .db.patch import run_patch
+    from .patch_methods import run_patch
 
     wait_for_services(settings)
-    return run_patch(settings, args.live, args.extra[0] if args.extra else None) or 0
+    if args.extra:
+        patch_name = args.extra[0]
+        extra_args = args.extra[1:]
+    else:
+        patch_name = None
+        extra_args = ()
+    return run_patch(settings, patch_name, args.live, extra_args)
 
 
 @command
