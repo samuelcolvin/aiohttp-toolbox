@@ -1,10 +1,9 @@
 import logging
 import os
-from unittest.mock import Mock
 
 import pytest
 
-from atoolbox.logs import ColouredAccessLogger, build_logging_config
+from atoolbox.logs import ColouredAccessLogger, build_logging_config, setup_logging
 from conftest import pre_startup_app
 from demo.main import create_app
 
@@ -49,7 +48,8 @@ async def test_log_msg_no_colour(cli_access_logger, caplog, mocker):
 
 
 async def test_log_msg_exception(cli_access_logger, caplog, mocker):
-    mocker.patch('atoolbox.logs.isatty', new=Mock(return_value=True))
+    mocker.patch('atoolbox.logs.isatty', return_value=True)
+    setup_logging()
     cli = await cli_access_logger()
     r = await cli.get('/errors/value_error')
     assert r.status == 500, await r.text()

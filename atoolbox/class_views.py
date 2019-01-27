@@ -1,12 +1,14 @@
 from asyncio import shield
 from functools import update_wrapper
-from typing import Type
+from typing import TYPE_CHECKING, Type
 
 from aiohttp import web
-from buildpg.asyncpg import BuildPgConnection
 from pydantic import BaseModel
 
 from .utils import json_response, parse_request_json
+
+if TYPE_CHECKING:  # pragma: no cover
+    from buildpg.asyncpg import BuildPgConnection  # noqa
 
 
 class View:
@@ -15,7 +17,7 @@ class View:
     def __init__(self, request):
         self.request: web.Request = request
         self.app: web.Application = request.app
-        self.conn: BuildPgConnection = request.get('conn')
+        self.conn: 'BuildPgConnection' = request.get('conn')
         self.settings = self.app['settings']
 
     @classmethod

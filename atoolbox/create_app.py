@@ -5,7 +5,6 @@ from typing import Optional
 
 from aiohttp import ClientSession, ClientTimeout, web
 
-from .logs import setup_logging
 from .middleware import csrf_middleware, error_middleware, pg_middleware
 from .settings import BaseSettings
 

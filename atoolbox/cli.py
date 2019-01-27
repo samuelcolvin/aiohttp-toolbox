@@ -10,8 +10,8 @@ from typing import Callable
 
 import uvloop
 from aiohttp.web import Application, run_app
-from pydantic.utils import import_string
 from pydantic import BaseSettings as PydanticBaseSettings
+from pydantic.utils import import_string
 
 from .logs import ColouredAccessLogger, setup_logging
 from .network import check_server, wait_for_services
@@ -118,7 +118,7 @@ def main(*args) -> int:
     parser.add_argument(
         '--live',
         action='store_true',
-        help='whether to run patches as live, default false, only applies to the "patch" command.'
+        help='whether to run patches as live, default false, only applies to the "patch" command.',
     )
     parser.add_argument(
         '--access-log',
