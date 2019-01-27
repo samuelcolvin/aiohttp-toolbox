@@ -153,6 +153,9 @@ class JsonErrors:
     class HTTPNotFound(_HTTPExceptionJson):
         status_code = 404
 
+    class HTTPMethodNotAllowed(_HTTPExceptionJson):
+        status_code = 405
+
     class HTTPConflict(_HTTPExceptionJson):
         status_code = 409
 

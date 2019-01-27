@@ -169,13 +169,6 @@ async def test_update_conflict(cli, db_conn):
     }
 
 
-async def test_exec_view(cli):
-    r = await cli.post_json('/exec/', {'pow': 3}, origin='null')
-    assert r.status == 200, await r.text()
-    obj = await r.json()
-    assert obj == {'ans': 8}
-
-
 async def test_invalid_page(cli):
     r = await cli.get('/orgs/?page=-1')
     assert r.status == 400, await r.text()

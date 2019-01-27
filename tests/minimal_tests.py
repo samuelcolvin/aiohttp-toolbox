@@ -8,6 +8,7 @@ from pydantic import BaseSettings as PydanticBaseSettings
 async def test_create_no_setting():
     from atoolbox import create_default_app
     from atoolbox.create_app import startup, cleanup
+
     app = await create_default_app()
     assert app['settings'] is None
     assert 'auth_fernet' not in app
@@ -15,7 +16,7 @@ async def test_create_no_setting():
     assert len(app.middlewares) == 3
 
     await startup(app)
-    assert 'http_client' in app
+    assert 'http_client' not in app
     assert 'pg' not in app
     assert 'redis' not in app
     await cleanup(app)
@@ -24,6 +25,7 @@ async def test_create_no_setting():
 async def test_create_setting():
     from atoolbox import BaseSettings, create_default_app
     from atoolbox.create_app import startup, cleanup
+
     settings = BaseSettings()
     app = await create_default_app(settings=settings)
     assert app['settings'] is not None
@@ -65,6 +67,7 @@ async def test_create_setting_warnings():
 
 async def test_settings_defaults_none():
     from atoolbox.settings import BaseSettings, RedisSettings
+
     assert RedisSettings.__module__ == 'atoolbox.settings'
 
     s = BaseSettings()

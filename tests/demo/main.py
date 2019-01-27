@@ -76,6 +76,8 @@ class OrganisationBread(Bread):
 
 
 class TestExecView(ExecView):
+    headers = {'Foobar': 'testing'}
+
     class Model(BaseModel):
         pow: int
 
@@ -96,7 +98,7 @@ async def create_app(settings):
         web.route('*', r'/status/{status:\d+}/', return_any_status),
         web.get('/user', handle_user),
         web.get('/errors/{do}', handle_errors),
-        web.post('/exec/', TestExecView.view()),
+        web.route('*', '/exec/', TestExecView.view()),
         web.get('/encrypt/', encrypt),
         web.get('/decrypt/', decrypt),
         web.post('/grecaptcha/', grecaptcha),
