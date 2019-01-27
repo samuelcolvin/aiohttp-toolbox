@@ -10,15 +10,17 @@ from .utils import JsonErrors, json_response, parse_request_json
 
 if TYPE_CHECKING:  # pragma: no cover
     from buildpg.asyncpg import BuildPgConnection  # noqa
+    from aioredis import Redis
 
 
 class View:
-    __slots__ = 'request', 'app', 'conn', 'settings'
+    __slots__ = 'request', 'app', 'conn', 'redis', 'settings'
 
     def __init__(self, request):
         self.request: web.Request = request
         self.app: web.Application = request.app
         self.conn: 'BuildPgConnection' = request.get('conn')
+        self.redis: 'Redis' = self.app.get('redis')
         self.settings = self.app['settings']
 
     @classmethod

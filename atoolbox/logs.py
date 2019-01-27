@@ -1,7 +1,6 @@
 import logging
 import logging.config
 import os
-import sys
 import traceback
 from datetime import datetime, timedelta
 from io import StringIO
@@ -136,12 +135,10 @@ def get_env_multiple(*names):
             return v
 
 
-def build_logging_config(debug=None, disable_existing=False, main_logger_name=None):
+def build_logging_config(debug, disable_existing, main_logger_name):
     """
     setup logging config by updating the arq logging config
     """
-    if debug is None:
-        debug = '--verbose' in sys.argv
     log_level = 'DEBUG' if debug else 'INFO'
     sentry_dsn = os.getenv('SENTRY_DSN', None)
     if sentry_dsn in ('', '-'):
@@ -170,7 +167,6 @@ def build_logging_config(debug=None, disable_existing=False, main_logger_name=No
         # we don't print above warnings on atoolbox.default to avoid duplicate errors in the console
         default_filters = ['not_warnings']
 
-    main_logger_name = main_logger_name or os.getenv('APP_LOGGER_NAME', 'app')
     config = {
         'version': 1,
         'disable_existing_loggers': disable_existing,
@@ -204,7 +200,7 @@ def build_logging_config(debug=None, disable_existing=False, main_logger_name=No
     return config, client
 
 
-def setup_logging(debug=None, disable_existing=False, main_logger_name=None):
+def setup_logging(debug=False, disable_existing=False, main_logger_name='app'):
     config, client = build_logging_config(debug, disable_existing, main_logger_name)
     logging.config.dictConfig(config)
     return client

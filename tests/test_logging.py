@@ -62,7 +62,7 @@ def test_format_size(size, output):
 
 
 def test_build_logging_config():
-    config, client = build_logging_config(True)
+    config, client = build_logging_config(True, False, 'app')
     assert client is None
     assert config['disable_existing_loggers'] is False
     assert config['handlers']['atoolbox.default']['level'] == 'DEBUG'

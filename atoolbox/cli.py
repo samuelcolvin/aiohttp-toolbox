@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from argparse import ArgumentParser
+from importlib import import_module
 from pathlib import Path
 from typing import Callable
 
@@ -57,6 +58,7 @@ def patch(args, settings: BaseSettings):
     from .patch_methods import run_patch
 
     wait_for_services(settings)
+    args.patches_path and import_module(args.patches_path)
     if args.extra:
         patch_name = args.extra[0]
         extra_args = args.extra[1:]
@@ -121,6 +123,12 @@ def main(*args) -> int:
             '"ATOOLBOX_SETTINGS" or "settings.Settings"'
         ),
     )
+    parser.add_argument('--verbose', action='store_true', help='whether to pring debug logs')
+    parser.add_argument(
+        '--log',
+        default=os.getenv('ATOOLBOX_LOG_NAME', 'app'),
+        help='Root name of logs for the app, defaults to to the environment variable "ATOOLBOX_LOG_NAME" or "app"',
+    )
     parser.add_argument(
         '--live',
         action='store_true',
@@ -132,14 +140,18 @@ def main(*args) -> int:
         action='store_true',
         help='whether run the access logger on web, default false, only applies to the "web" command.',
     )
+    parser.add_argument(
+        '--patches-path', help='patch to import before running patches, only applies to the "patch" command.'
+    )
     parser.add_argument('extra', nargs='*', default=[], help='Extra arguments to pass to the command.')
     try:
-        ns = parser.parse_args(args)
+        ns, extra = parser.parse_known_args(args)
     except SystemExit:
         return 1
 
+    ns.extra.extend(extra)
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    logging_client = setup_logging()
+    logging_client = setup_logging(debug=ns.verbose, main_logger_name=ns.log)
     try:
         sys.path.append(os.getcwd())
         root_dir = str(Path(ns.root).resolve())

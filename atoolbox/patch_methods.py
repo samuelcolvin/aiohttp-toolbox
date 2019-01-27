@@ -3,7 +3,6 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Tuple
 
-from .db.connection import lenient_conn
 from .settings import BaseSettings
 
 logger = logging.getLogger('atoolbox.patch')
@@ -20,7 +19,7 @@ def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[s
     if patch_name is None:
         logger.info(
             'available patches:\n{}'.format(
-                '\n'.join('  {}: {}'.format(p.func.__name__, p.func.__doc__.strip('\n ')) for p in patches)
+                '\n'.join('  {}: {}'.format(p.func.__name__, (p.func.__doc__ or '').strip('\n ')) for p in patches)
             )
         )
         return 0
@@ -43,17 +42,20 @@ def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[s
 
 
 async def _run_patch(settings, patch: Patch, live: bool, args: Tuple[str, ...]):
+    from .db.connection import lenient_conn
+
     conn = await lenient_conn(settings)
     tr = None
     if not patch.direct:
         tr = conn.transaction()
         await tr.start()
     logger.info('=' * 40)
+    kwargs = dict(conn=conn, settings=settings, live=live, args=args, logger=logger)
     try:
         if asyncio.iscoroutinefunction(patch.func):
-            result = await patch.func(conn=conn, settings=settings, live=live, args=args)
+            result = await patch.func(**kwargs)
         else:
-            result = patch.func(conn=conn, settings=settings, live=live, args=args)
+            result = patch.func(**kwargs)
         if result is not None:
             logger.info('result: %s', result)
     except BaseException:
