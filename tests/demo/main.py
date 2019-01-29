@@ -82,6 +82,8 @@ class TestExecView(ExecView):
         pow: int
 
     async def execute(self, m: Model):
+        if m.pow < 1:
+            raise JsonErrors.HTTP470('values less than 1 no allowed')
         v = await self.conn.fetchval('SELECT 2 ^ $1', m.pow)
         return {'ans': v}
 

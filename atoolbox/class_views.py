@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Dict, Type
 
 from aiohttp import web
 from aiohttp.hdrs import METH_GET, METH_OPTIONS, METH_POST
+from aiohttp.web_exceptions import HTTPException
 from pydantic import BaseModel
 
 from .utils import JsonErrors, json_response, parse_request_json
@@ -53,20 +54,31 @@ class ExecView(View):
         raise NotImplementedError
 
     async def schema(self):
-        return json_response(headers_=self.build_headers(), **self.Model.schema())
+        return json_response(**self.Model.schema())
 
     def build_headers(self):
         return self.headers
 
     async def call(self):
-        if self.request.method == METH_POST:
-            m = await parse_request_json(self.request, self.Model)
-            response_data = await shield(self.execute(m))
-            response_data = response_data or {'status': 'ok'}
-            return json_response(headers_=self.build_headers(), **response_data)
-        elif self.request.method in (METH_OPTIONS, METH_GET):
-            return await self.schema()
+        try:
+            if self.request.method == METH_POST:
+                m = await parse_request_json(self.request, self.Model)
+                response_data = await shield(self.execute(m))
+                response_data = response_data or {'status': 'ok'}
+                response = json_response(**response_data)
+            elif self.request.method in (METH_OPTIONS, METH_GET):
+                response = await self.schema()
+            else:
+                raise JsonErrors.HTTPMethodNotAllowed('Only GET, OPTIONS and POST requests are permitted.')
+        except HTTPException as exc:
+            headers = self.build_headers()
+            if headers:
+                exc.headers.update(headers)
+                raise exc from exc
+            else:
+                raise
         else:
-            raise JsonErrors.HTTPMethodNotAllowed(
-                'Only GET, OPTIONS and POST requests are permitted.', headers=self.build_headers()
-            )
+            headers = self.build_headers()
+            if headers:
+                response.headers.update(headers)
+            return response

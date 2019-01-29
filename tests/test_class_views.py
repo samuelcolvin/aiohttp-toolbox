@@ -46,3 +46,11 @@ async def test_put(cli):
     obj = await r.json()
     assert obj == {'message': 'Only GET, OPTIONS and POST requests are permitted.'}
     assert r.headers['Foobar'] == 'testing'
+
+
+async def test_error(cli):
+    r = await cli.post_json('/exec/', {'pow': -2}, origin='null')
+    assert r.status == 470, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'values less than 1 no allowed'}
+    assert r.headers['Foobar'] == 'testing'
