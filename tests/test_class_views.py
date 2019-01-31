@@ -44,7 +44,7 @@ async def test_put(cli):
     )
     assert r.status == 405, await r.text()
     obj = await r.json()
-    assert obj == {'message': 'Only GET, OPTIONS and POST requests are permitted.'}
+    assert obj == {'message': 'Method not permitted.', 'details': {'allowed_methods': ['GET', 'OPTIONS', 'POST']}}
     assert r.headers['Foobar'] == 'testing'
 
 
@@ -54,3 +54,22 @@ async def test_error(cli):
     obj = await r.json()
     assert obj == {'message': 'values less than 1 no allowed'}
     assert r.headers['Foobar'] == 'testing'
+
+
+async def test_no_headers(cli):
+    r = await cli.post_json('/exec-simple/', {'v': 'ping'}, origin='null')
+    assert r.status == 200, await r.text()
+    obj = await r.json()
+    assert obj == {'ans': 'pong'}
+    assert r.headers.keys() == {'Content-Type', 'Content-Length', 'Date', 'Server'}
+
+
+async def test_no_headers_error(cli):
+    r = await cli.post_json('/exec-simple/', {'v': 'x'}, origin='null')
+    assert r.status == 400, await r.text()
+    obj = await r.json()
+    assert obj == {
+        'message': 'Invalid Data',
+        'details': [{'loc': ['v'], 'msg': 'value is not a valid enumeration member', 'type': 'type_error.enum'}],
+    }
+    assert r.headers.keys() == {'Content-Type', 'Content-Length', 'Date', 'Server'}

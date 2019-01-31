@@ -156,6 +156,11 @@ class JsonErrors:
     class HTTPMethodNotAllowed(_HTTPExceptionJson):
         status_code = 405
 
+        def __init__(self, message, allowed_methods, *, headers=None):
+            headers = headers or {}
+            headers.setdefault('Allow', ','.join(allowed_methods))
+            super().__init__(message, details={'allowed_methods': allowed_methods}, headers=headers)
+
     class HTTPConflict(_HTTPExceptionJson):
         status_code = 409
 

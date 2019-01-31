@@ -53,23 +53,31 @@ class ExecView(View):
     async def execute(self, m: Model):
         raise NotImplementedError
 
-    async def schema(self):
+    async def get(self):
         return json_response(**self.Model.schema())
+
+    async def options(self):
+        return json_response(**self.Model.schema())
+
+    async def post(self):
+        m = await parse_request_json(self.request, self.Model)
+        response_data = await shield(self.execute(m))
+        response_data = response_data or {'status': 'ok'}
+        return json_response(**response_data)
 
     def build_headers(self):
         return self.headers
 
     async def call(self):
         try:
-            if self.request.method == METH_POST:
-                m = await parse_request_json(self.request, self.Model)
-                response_data = await shield(self.execute(m))
-                response_data = response_data or {'status': 'ok'}
-                response = json_response(**response_data)
-            elif self.request.method in (METH_OPTIONS, METH_GET):
-                response = await self.schema()
+            if self.request.method == METH_OPTIONS:
+                response = await self.options()
+            elif self.request.method == METH_GET:
+                response = await self.get()
+            elif self.request.method == METH_POST:
+                response = await self.post()
             else:
-                raise JsonErrors.HTTPMethodNotAllowed('Only GET, OPTIONS and POST requests are permitted.')
+                raise JsonErrors.HTTPMethodNotAllowed('Method not permitted.', [METH_GET, METH_OPTIONS, METH_POST])
         except HTTPException as exc:
             headers = self.build_headers()
             if headers:

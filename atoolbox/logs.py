@@ -192,7 +192,7 @@ def build_logging_config(debug, disable_existing, main_logger_name):
         },
         'loggers': {
             'atoolbox': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
-            'atoolbox.access': {'handlers': ['atoolbox.simple'], 'level': log_level},
+            'atoolbox.access': {'handlers': ['atoolbox.simple'], 'level': log_level, 'propagate': False},
             main_logger_name: {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
             'arq': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
         },

@@ -1,3 +1,5 @@
+from enum import Enum
+
 from aiohttp import web
 from aiohttp_session import new_session
 from pydantic import BaseModel, constr
@@ -88,6 +90,18 @@ class TestExecView(ExecView):
         return {'ans': v}
 
 
+class TestSimpleExecView(ExecView):
+    class Model(BaseModel):
+        class PingPong(Enum):
+            ping = 'ping'
+            pong = 'pong'
+
+        v: PingPong
+
+    async def execute(self, m: Model):
+        return {'ans': 'ping' if m.v == 'pong' else 'pong'}
+
+
 async def get_user(request):
     if '499' in request.path:
         raise RuntimeError('get_user broken')
@@ -101,6 +115,7 @@ async def create_app(settings):
         web.get('/user', handle_user),
         web.get('/errors/{do}', handle_errors),
         web.route('*', '/exec/', TestExecView.view()),
+        web.route('*', '/exec-simple/', TestSimpleExecView.view()),
         web.get('/encrypt/', encrypt),
         web.get('/decrypt/', decrypt),
         web.post('/grecaptcha/', grecaptcha),
