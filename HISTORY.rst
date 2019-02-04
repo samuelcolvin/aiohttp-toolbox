@@ -3,6 +3,14 @@
 History
 -------
 
+v0.2.0 (2019-02-04)
+...................
+* improved ``class_views``
+* use ``argparse`` in cli
+* fix logging setup
+* allow patches to not be coroutines
+* add ``skip_if_offline`` pytest decorator
+
 v0.1.0 (2019-01-24)
 ...................
 * improve logging output #9
