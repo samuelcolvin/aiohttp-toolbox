@@ -1,8 +1,10 @@
+import asyncio
 import json
 import os
 from typing import List
 
 import pytest
+from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from pydantic import BaseModel, BaseSettings as PydanticBaseSettings
 
@@ -10,6 +12,7 @@ from atoolbox.create_app import cleanup, create_default_app, startup
 from atoolbox.db.helpers import SimplePgPool, run_sql_section
 from atoolbox.logs import setup_logging
 from atoolbox.middleware import error_middleware
+from atoolbox.test_utils import Offline, create_dummy_server, return_any_status
 from atoolbox.utils import JsonErrors, get_ip, parse_request_query, raw_json_response, slugify
 
 
@@ -183,3 +186,54 @@ async def test_redis_settings_module():
     assert s.redis_settings is not None
     assert s.pg_dsn is not None
     assert s.auth_key is not None
+
+
+def test_is_offline(mocker):
+    ci_value = os.environ.pop('CI', None)
+    try:
+        fake_dns_resolver = mocker.patch('aiodns.DNSResolver.query')
+        fake_dns_resolver.side_effect = asyncio.TimeoutError('timed out')
+        offline = Offline()
+        assert bool(offline) is True
+        assert bool(offline) is True
+        fake_dns_resolver.assert_called_once_with('google.com', 'A')
+    finally:
+        if ci_value:
+            os.environ['CI'] = ci_value
+
+
+def test_is_offline_ci(mocker):
+    os.environ['CI'] = '1'
+    try:
+        fake_dns_resolver = mocker.patch('aiodns.DNSResolver.query')
+        fake_dns_resolver.side_effect = asyncio.TimeoutError('timed out')
+        offline = Offline()
+        assert bool(offline) is False
+        assert bool(offline) is False
+        assert not fake_dns_resolver.called
+    finally:
+        os.environ.pop('CI')
+
+
+def test_is_online(mocker):
+    async def _query(*args):
+        pass
+
+    ci_value = os.environ.pop('CI', None)
+    try:
+        fake_dns_resolver = mocker.patch('aiodns.DNSResolver.query')
+        fake_dns_resolver.side_effect = _query
+        offline = Offline()
+        assert bool(offline) is False
+        assert bool(offline) is False
+        fake_dns_resolver.assert_called_once_with('google.com', 'A')
+    finally:
+        if ci_value:
+            os.environ['CI'] = ci_value
+
+
+async def test_create_dummy_server(aiohttp_server):
+    routes = [web.get('/extra-route/', return_any_status, name='extra-route')]  # just so we have something
+    server = await create_dummy_server(aiohttp_server, extra_routes=routes, extra_context={'x': 42})
+    assert list(server.app.router._named_resources) == ['any-status', 'grecaptcha-dummy', 'extra-route']
+    assert server.app['x'] == 42

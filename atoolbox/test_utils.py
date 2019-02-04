@@ -1,3 +1,6 @@
+import asyncio
+import os
+import sys
 from dataclasses import dataclass
 from typing import List
 
@@ -14,7 +17,7 @@ async def return_any_status(request):
     return Response(text=f'test response with status {status}', status=status)
 
 
-async def grecaptcha(request):
+async def grecaptcha_dummy(request):
     data = await request.post()
     request.app['log'][-1] = 'grecaptcha {response}'.format(**data)
     if data['response'] == '__ok__':
@@ -34,7 +37,10 @@ async def log_middleware(request, handler):
 def create_dummy_app() -> Application:
     app = web.Application(middlewares=(log_middleware,))
     app.add_routes(
-        [web.route('*', r'/status/{status:\d+}/', return_any_status), web.post(r'/grecaptcha_url/', grecaptcha)]
+        [
+            web.route('*', r'/status/{status:\d+}/', return_any_status, name='any-status'),
+            web.post(r'/grecaptcha_url/', grecaptcha_dummy, name='grecaptcha-dummy'),
+        ]
     )
     app['log'] = []
     return app
@@ -56,3 +62,41 @@ async def create_dummy_server(create_server, *, extra_routes=None, extra_context
         app.update(extra_context)
     server = await create_server(app)
     return DummyServer(server, app, app['log'], f'http://localhost:{server.port}')
+
+
+class Offline:
+    """
+    Lazy pytest decorator to skip tests if you're currently not online.
+
+    Usage:
+        _offline = Offline()
+        skip_if_offline = pytest.mark.skipif(_offline, reason='not online')
+    """
+
+    def __init__(self):
+        self.is_offline = None
+
+    def __bool__(self):
+        if self.is_offline is None:
+            loop = asyncio.new_event_loop()
+            self.is_offline = loop.run_until_complete(self._check())
+        return self.is_offline
+
+    async def _check(self):
+        import aiodns
+        from async_timeout import timeout
+
+        if os.getenv('CI'):
+            # on CI we should always be online
+            # I assume that all CI services set the CI environment variable!
+            return False
+
+        resolver = aiodns.DNSResolver()
+        try:
+            with timeout(1):
+                await resolver.query('google.com', 'A')
+        except (aiodns.error.DNSError, asyncio.TimeoutError) as e:
+            print(f'\nnot online: {e.__class__.__name__} {e}\n', file=sys.stderr)
+            return True
+        else:
+            return False
