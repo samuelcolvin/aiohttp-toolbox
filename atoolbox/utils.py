@@ -84,7 +84,7 @@ def parse_request_query(request, model: Type[PydanticModel], *, headers=None) ->
     try:
         return model(**data)
     except ValidationError as e:
-        raise JsonErrors.HTTPBadRequest(message='Invalid Data', details=e.errors(), headers=headers)
+        raise JsonErrors.HTTPBadRequest(message='Invalid query data', details=e.errors(), headers=headers)
 
 
 async def parse_request_json_ignore_missing(
@@ -125,6 +125,8 @@ class JsonErrors:
         custom_reason = None
 
         def __init__(self, message, *, details=None, headers=None):
+            self.message = message
+            self.details = details
             data = {'message': message}
             if details:
                 data['details'] = details
@@ -134,6 +136,12 @@ class JsonErrors:
                 headers=headers,
                 reason=self.custom_reason,
             )
+
+        def __repr__(self) -> str:
+            return f'{super().__repr__()}, {self.status}: {self.message}'
+
+        def __str__(self) -> str:
+            return repr(self)
 
     class HTTPAccepted(_HTTPExceptionJson):
         status_code = 202

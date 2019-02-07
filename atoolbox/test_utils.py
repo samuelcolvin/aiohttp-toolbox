@@ -4,11 +4,13 @@ import sys
 from dataclasses import dataclass
 from typing import List
 
+import aiodns
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 from aiohttp.web import Application
 from aiohttp.web_middlewares import middleware
 from aiohttp.web_response import Response, json_response
+from async_timeout import timeout
 
 
 async def return_any_status(request):
@@ -83,9 +85,6 @@ class Offline:
         return self.is_offline
 
     async def _check(self):
-        import aiodns
-        from async_timeout import timeout
-
         if os.getenv('CI'):
             # on CI we should always be online
             # I assume that all CI services set the CI environment variable!

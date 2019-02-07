@@ -3,6 +3,10 @@
 History
 -------
 
+v0.2.1 (2019-02-07)
+...................
+* tweak imports, repr method for ``JsonErrors``
+
 v0.2.0 (2019-02-04)
 ...................
 * improved ``class_views``

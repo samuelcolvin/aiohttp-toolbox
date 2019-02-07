@@ -52,7 +52,7 @@ setup(
     python_requires='>=3.6',
     zip_safe=True,
     install_requires=[
-        'aiodns>=1.2.0',
+        'aiodns>=1.2.0',  # TODO uprev to 2 once release to get rid of typing
         'aiohttp>=3.5.4',
         'async-timeout>=3.0.1',
         'cchardet>=2.1.4',

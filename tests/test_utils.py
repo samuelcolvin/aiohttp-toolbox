@@ -130,7 +130,7 @@ def test_parse_request_query_error():
 
     error = json.loads(exc_info.value.body.decode())
     assert error == {
-        'message': 'Invalid Data',
+        'message': 'Invalid query data',
         'details': [{'loc': ['z'], 'msg': 'field required', 'type': 'value_error.missing'}],
     }
 
@@ -237,3 +237,11 @@ async def test_create_dummy_server(aiohttp_server):
     server = await create_dummy_server(aiohttp_server, extra_routes=routes, extra_context={'x': 42})
     assert list(server.app.router._named_resources) == ['any-status', 'grecaptcha-dummy', 'extra-route']
     assert server.app['x'] == 42
+
+
+def test_error_repr():
+    assert repr(JsonErrors.HTTPNotFound('whatever')) == '<HTTPNotFound Not Found not prepared>, 404: whatever'
+
+
+def test_error_str():
+    assert repr(JsonErrors.HTTPNotFound('whatever')) == '<HTTPNotFound Not Found not prepared>, 404: whatever'
