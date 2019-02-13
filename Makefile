@@ -14,14 +14,14 @@ install:
 
 .PHONY: format
 format:
-	isort -rc -w 120 atoolbox tests
+	isort -rc atoolbox tests
 	black -S -l 120 --py36 atoolbox tests
 
 .PHONY: lint
 lint:
 	python setup.py check -rms
 	flake8 atoolbox/ tests/
-	pytest atoolbox -p no:sugar -q -W ignore
+	isort -rc --check-only atoolbox tests
 	black -S -l 120 --py36 --check atoolbox tests
 
 .PHONY: test
