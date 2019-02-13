@@ -3,6 +3,11 @@
 History
 -------
 
+v0.2.2 (2019-02-13)
+...................
+* ``pg_middleware`` now respects ``pg_middleware_check`` function, fix #10
+
+
 v0.2.1 (2019-02-07)
 ...................
 * tweak imports, repr method for ``JsonErrors``

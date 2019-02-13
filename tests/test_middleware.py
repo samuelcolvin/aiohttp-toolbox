@@ -1,6 +1,8 @@
 from aiohttp import FormData
 
 from atoolbox.middleware import exc_extra
+from tests.conftest import pre_startup_app
+from tests.demo.main import create_app
 
 
 async def test_200(cli, caplog):
@@ -63,7 +65,7 @@ async def test_value_error(cli, caplog):
 
 
 async def test_user(cli, caplog):
-    r = await cli.get('/user')
+    r = await cli.get('/user/')
     assert r.status == 488, await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
@@ -180,3 +182,21 @@ async def test_preflight_failed(cli):
     assert r.headers['Access-Control-Allow-Origin'] == '*'
     obj = await r.json()
     assert obj == {'message': 'Access-Control checks failed'}
+
+
+async def test_pg_conn(cli):
+    r = await cli.get('/request-context/')
+    assert r.status == 200, await r.text()
+    assert 'conn' in await r.json()
+
+
+async def test_no_pg_conn(settings, db_conn, aiohttp_client):
+    app = await create_app(settings=settings)
+    app['test_conn'] = db_conn
+    app['pg_middleware_check'] = lambda r: False
+    app.on_startup.insert(0, pre_startup_app)
+    cli = await aiohttp_client(app)
+
+    r = await cli.get('/request-context/')
+    assert r.status == 200, await r.text()
+    assert 'conn' not in await r.json()

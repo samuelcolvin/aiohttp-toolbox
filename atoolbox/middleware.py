@@ -114,9 +114,13 @@ async def error_middleware(request, handler):
 
 @middleware
 async def pg_middleware(request, handler):
-    async with request.app['pg'].acquire() as conn:
-        request['conn'] = conn
+    check = request.app.get('pg_middleware_check')
+    if check and not check(request):
         return await handler(request)
+    else:
+        async with request.app['pg'].acquire() as conn:
+            request['conn'] = conn
+            return await handler(request)
 
 
 def _path_match(request, paths):

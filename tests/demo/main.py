@@ -18,9 +18,13 @@ async def handle_200(request):
 
 async def handle_user(request):
     session = await new_session(request)
-    async with request.app['pg'].acquire() as conn:
-        session.update({'user_id': await conn.fetchval('SELECT id FROM users')})
+    session.update({'user_id': await request['conn'].fetchval('SELECT id FROM users')})
     return web.Response(status=488)
+
+
+async def request_context(request):
+    v = {k: str(v) for k, v in request.items()}
+    return json_response(**v)
 
 
 async def handle_errors(request):
@@ -112,7 +116,8 @@ async def create_app(settings):
     routes = [
         web.get('/', handle_200),
         web.route('*', r'/status/{status:\d+}/', return_any_status),
-        web.get('/user', handle_user),
+        web.get('/user/', handle_user),
+        web.get('/request-context/', request_context),
         web.get('/errors/{do}', handle_errors),
         web.route('*', '/exec/', TestExecView.view()),
         web.route('*', '/exec-simple/', TestSimpleExecView.view()),
