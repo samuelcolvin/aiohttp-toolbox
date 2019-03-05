@@ -28,7 +28,7 @@ async def startup(app: web.Application):
 
     if 'redis' not in app and getattr(settings, 'redis_settings', None):
         try:
-            from arq.connections import create_pool
+            from arq import create_pool
         except ImportError:
             warnings.warn('arq and aioredis need to be installed to use redis', RuntimeWarning)
         else:
