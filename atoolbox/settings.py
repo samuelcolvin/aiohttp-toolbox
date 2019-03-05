@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from pydantic import BaseSettings as _BaseSettings, validator
 
 try:
-    from arq import RedisSettings
+    from arq.connections import RedisSettings
 
     redis_settings_default = 'redis://localhost:6379'
 except ImportError:
@@ -92,7 +92,7 @@ class BaseSettings(_BaseSettings):
         if v is None:
             return
 
-        if RedisSettings.__module__ != 'arq.utils':
+        if RedisSettings.__module__ != 'arq.connections':
             raise RuntimeError(f'arq must be installed to use redis, redis_settings set to {v!r}')
         conf = urlparse(v)
         return RedisSettings(

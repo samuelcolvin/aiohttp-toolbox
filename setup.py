@@ -52,12 +52,12 @@ setup(
     python_requires='>=3.6',
     zip_safe=True,
     install_requires=[
-        'aiodns>=1.2.0',  # TODO uprev to 2 once release to get rid of typing
+        'aiodns>=2.0.0',
         'aiohttp>=3.5.4',
         'async-timeout>=3.0.1',
         'cchardet>=2.1.4',
         'dataclasses>=0.6;python_version<"3.7"',
-        'pydantic>=0.18',
+        'pydantic>=0.20',
         'raven>=6.10.0',
         'raven-aiohttp>=0.7.0',
         'uvloop>=0.11.2',
@@ -65,7 +65,7 @@ setup(
     extras_require={
         'all': [
             'aiohttp-session>=2.7.0',
-            'arq>=0.14',
+            'arq>=0.16a1',
             'asyncpg>=0.17.0',
             'buildpg>=0.0.2',
             'cryptography>=2.4.1',
