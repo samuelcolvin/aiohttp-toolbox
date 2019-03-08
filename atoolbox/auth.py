@@ -2,8 +2,9 @@ import logging
 
 from pydantic import BaseModel
 
+from .exceptions import JsonErrors, RequestError
 from .settings import BaseSettings
-from .utils import JsonErrors, RequestError, get_ip, remove_port
+from .utils import get_ip, remove_port
 
 logger = logging.getLogger('atoolbox.auth')
 

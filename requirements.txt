@@ -1,16 +1,16 @@
 # exists to prompt builds by pyup
 -r tests/requirements.txt
 
-aiodns==1.2.0
+aiodns==2.0.0
 aiohttp==3.5.4
 aiohttp-session==2.7.0
-arq==0.14
+arq==0.16a1
 asyncpg==0.17.0
 async-timeout==3.0.1
 buildpg==0.0.2
 cchardet==2.1.4
 cryptography==2.4.1
-pydantic==0.18
+pydantic==0.20.1
 raven==6.10.0
 raven-aiohttp==0.7.0
 uvloop==0.11.2

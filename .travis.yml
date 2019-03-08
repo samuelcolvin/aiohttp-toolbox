@@ -9,7 +9,6 @@ services:
 
 matrix:
   include:
-  - python: '3.6'
   - python: '3.7'
     dist: xenial
     sudo: required
@@ -40,4 +39,4 @@ deploy:
   skip_upload_docs: true
   on:
     tags: true
-    python: 3.6
+    python: 3.7

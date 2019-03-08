@@ -3,6 +3,8 @@ import json
 from decimal import Decimal
 from uuid import UUID
 
+JSON_CONTENT_TYPE = 'application/json'
+
 
 def _isoformat(o):
     return o._isoformat()

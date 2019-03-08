@@ -12,7 +12,6 @@ logger = logging.getLogger('atoolbox.web')
 
 
 async def startup(app: web.Application):
-    loop = asyncio.get_event_loop()
     settings: Optional[BaseSettings] = app['settings']
     if not settings:
         return
@@ -29,15 +28,15 @@ async def startup(app: web.Application):
 
     if 'redis' not in app and getattr(settings, 'redis_settings', None):
         try:
-            from arq import create_pool_lenient
+            from arq import create_pool
         except ImportError:
             warnings.warn('arq and aioredis need to be installed to use redis', RuntimeWarning)
         else:
-            app['redis'] = await create_pool_lenient(settings.redis_settings, loop)
+            app['redis'] = await create_pool(settings.redis_settings)
 
     if getattr(settings, 'create_http_client', False):
         timeout = getattr(settings, 'http_client_timeout', 30)
-        app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout), loop=loop)
+        app['http_client'] = ClientSession(timeout=ClientTimeout(total=timeout))
 
 
 async def cleanup(app: web.Application):

@@ -180,7 +180,7 @@ async def test_create_app_pg(mocker):
 async def test_redis_settings_module():
     from atoolbox.settings import BaseSettings, RedisSettings
 
-    assert RedisSettings.__module__ == 'arq.utils'
+    assert RedisSettings.__module__ == 'arq.connections'
 
     s = BaseSettings()
     assert s.redis_settings is not None

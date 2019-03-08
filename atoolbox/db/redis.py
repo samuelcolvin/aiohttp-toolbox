@@ -3,10 +3,10 @@ import asyncio
 from .. import BaseSettings
 
 
-async def async_flush_redis(settings: BaseSettings, loop):
-    from arq import create_pool_lenient
+async def async_flush_redis(settings: BaseSettings):
+    from arq import create_pool
 
-    redis = await create_pool_lenient(settings.redis_settings, loop=loop)
+    redis = await create_pool(settings.redis_settings)
     await redis.flushdb()
     redis.close()
     await redis.wait_closed()
@@ -14,4 +14,4 @@ async def async_flush_redis(settings: BaseSettings, loop):
 
 def flush_redis(settings: BaseSettings):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(async_flush_redis(settings, loop))
+    loop.run_until_complete(async_flush_redis(settings))

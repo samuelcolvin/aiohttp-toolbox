@@ -3,6 +3,10 @@
 History
 -------
 
+v0.3.0 (2019-03-08)
+...................
+* support ``arq >= 0.16`` and ``pydantic > 0.20``, #12
+
 v0.2.2 (2019-02-13)
 ...................
 * ``pg_middleware`` now respects ``pg_middleware_check`` function, fix #10
