@@ -1,8 +1,8 @@
 from aiohttp import FormData
 
 from atoolbox.middleware import exc_extra
-from tests.conftest import pre_startup_app
-from tests.demo.main import create_app
+from conftest import pre_startup_app
+from demo.main import create_app
 
 
 async def test_200(cli, caplog):

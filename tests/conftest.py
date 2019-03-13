@@ -1,5 +1,7 @@
 import asyncio
 import json
+import os
+from pathlib import Path
 
 import pytest
 from aiohttp.test_utils import teardown_test_loop
@@ -104,3 +106,13 @@ async def _fix_cli(settings, db_conn, aiohttp_client, redis, loop):
 
     cli.post_json = post_json
     return cli
+
+
+@pytest.fixture(name='tmp_work_path')
+def _fix_tmp_work_path(tmp_path):
+    old_work_dir = Path('.').resolve()
+    os.chdir(tmp_path)
+
+    yield tmp_path
+
+    os.chdir(old_work_dir)

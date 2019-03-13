@@ -68,12 +68,12 @@ def test_invalid_command(capsys, env):
     assert "argument command: invalid choice: 'x'" in capsys.readouterr().err
 
 
-def test_worker(env, tmpworkdir):
+def test_worker(env, tmp_work_path):
     code = 'def bar(*args, **kwargs):\n  with open("sentinal.txt", "w") as f:\n    f.write("executed")\n'
-    tmpworkdir.join('foo.py').write_text(code, 'utf8')
+    (tmp_work_path / 'foo.py').write_text(code)
     os.environ['APP_WORKER_FUNC'] = 'foo.bar'
     assert 0 == cli_main('worker')
-    assert tmpworkdir.join('sentinal.txt').read_text('utf8') == 'executed'
+    assert (tmp_work_path / 'sentinal.txt').read_text() == 'executed'
 
 
 def test_no_worker(caplog, env):
@@ -147,3 +147,70 @@ def test_check_server_url_only(caplog, env):
 def test_check_server_default_args(caplog, env):
     assert 1 == cli_main('check_web')
     assert 'checking server is running at "http://localhost:8000/" expecting 200...' in caplog.text
+
+
+def test_auto_web(mocker, env):
+    os.environ['ATOOLBOX_COMMAND'] = 'web'
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 0 == cli_main('auto')
+    f.assert_called_once()
+
+
+def test_auto_worker(mocker, env, tmp_work_path):
+    os.environ['ATOOLBOX_COMMAND'] = 'worker'
+    f = mocker.patch('atoolbox.cli.run_app')
+    code = 'def bar(*args, **kwargs):\n  with open("sentinal.txt", "w") as f:\n    f.write("executed")\n'
+    (tmp_work_path / 'foo.py').write_text(code)
+    os.environ['APP_WORKER_FUNC'] = 'foo.bar'
+    assert not (tmp_work_path / 'sentinal.txt').exists()
+
+    assert 0 == cli_main('auto')
+    assert (tmp_work_path / 'sentinal.txt').exists()
+    assert not f.called
+
+
+def test_auto_invalid(mocker, env, caplog):
+    os.environ['ATOOLBOX_COMMAND'] = 'foobar'
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 1 == cli_main('auto')
+    assert not f.called
+    assert "Invalid value for ATOOLBOX_COMMAND: 'foobar'" in caplog.text
+
+
+def test_auto_web_dyno(mocker, env):
+    os.environ.pop('ATOOLBOX_COMMAND', None)
+    os.environ['DYNO'] = 'web.1'
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 0 == cli_main('auto')
+    f.assert_called_once()
+
+
+def test_auto_web_port(mocker, env, caplog):
+    os.environ.pop('ATOOLBOX_COMMAND', None)
+    os.environ.pop('DYNO', None)
+    os.environ['PORT'] = '123'
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 0 == cli_main('auto')
+    f.assert_called_once()
+    assert "using environment variable PORT=123 to infer command as web" in caplog.text
+
+
+def test_auto_worker_nothing_set(mocker, env, caplog, tmp_work_path):
+    os.environ.pop('ATOOLBOX_COMMAND', None)
+    os.environ.pop('DYNO', None)
+    os.environ.pop('PORT', None)
+
+    code = 'def bar(*args, **kwargs):\n  with open("sentinal.txt", "w") as f:\n    f.write("executed")\n'
+    (tmp_work_path / 'foo.py').write_text(code)
+    os.environ['APP_WORKER_FUNC'] = 'foo.bar'
+
+    f = mocker.patch('atoolbox.cli.run_app')
+    f.side_effect = mock_run_app
+    assert 0 == cli_main('auto')
+    assert not f.called
+    assert (tmp_work_path / 'sentinal.txt').read_text() == 'executed'
+    assert 'no environment variable found to infer command, assuming worker' in caplog.text

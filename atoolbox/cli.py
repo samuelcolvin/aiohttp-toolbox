@@ -7,7 +7,7 @@ import sys
 from argparse import ArgumentParser
 from importlib import import_module
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Dict, Optional
 
 import uvloop
 from aiohttp.web import Application, run_app
@@ -19,7 +19,7 @@ from .network import check_server, wait_for_services
 from .settings import BaseSettings
 
 logger = logging.getLogger('atoolbox.cli')
-commands = {}
+commands: Dict[str, Optional[Callable]] = {'auto': None}
 
 
 def command(func: Callable):
@@ -102,9 +102,39 @@ class CliError(RuntimeError):
     pass
 
 
+def get_auto_command():
+    command_env = os.getenv('ATOOLBOX_COMMAND')
+    port_env = os.getenv('PORT')
+    dyno_env = os.getenv('DYNO')
+    if command_env:
+        logger.info('using environment variable ATOOLBOX_COMMAND=%r to infer command', command_env)
+        command_env = command_env.lower()
+        if command_env != 'auto' and command_env in commands:
+            return commands[command_env]
+        else:
+            raise CliError(f'Invalid value for ATOOLBOX_COMMAND: {command_env!r}')
+    elif dyno_env:
+        logger.info('using environment variable DYNO=%r to infer command', dyno_env)
+        return web if dyno_env.lower().startswith('web') else worker
+    elif port_env and port_env.isdigit():
+        logger.info('using environment variable PORT=%s to infer command as web', port_env)
+        return web
+    else:
+        logger.info('no environment variable found to infer command, assuming worker')
+        return worker
+
+
 def main(*args) -> int:
     parser = ArgumentParser(description='aiohttp-toolbox command line interface')
-    parser.add_argument('command', type=str, choices=list(commands.keys()), help='The command to run')
+    parser.add_argument(
+        'command',
+        type=str,
+        choices=list(commands.keys()),
+        help=(
+            'The command to run, use "auto" to infer the command from environment variables, '
+            'ATOOLBOX_COMMAND or DYNO (heroku) or PORT.'
+        ),
+    )
     parser.add_argument(
         '--root',
         dest='root',
@@ -169,7 +199,7 @@ def main(*args) -> int:
         settings = settings_cls()
         locale.setlocale(locale.LC_ALL, getattr(settings, 'locale', 'en_US.utf8'))
 
-        func = commands[ns.command]
+        func = commands[ns.command] or get_auto_command()
         return func(ns, settings) or 0
     except CliError as exc:
         logger.error('%s', exc)
