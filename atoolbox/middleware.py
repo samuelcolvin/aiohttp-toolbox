@@ -62,12 +62,13 @@ async def log_extra(request, response=None, **more):
     return dict(data=data, user=user, tags=tags)
 
 
-async def log_warning(request, response):
+async def log_warning(request, response, exc_info=False):
     logger.warning(
         '%s %s unexpected response %d',
         request.method,
         request.rel_url,
         response.status,
+        exc_info=exc_info,
         extra={'fingerprint': [request.rel_url, str(response.status)], **await log_extra(request, response)},
     )
 
@@ -91,7 +92,7 @@ async def error_middleware(request, handler):
     except HTTPException as e:
         should_warn_ = request.app.get('middleware_should_warn') or should_warn
         if should_warn_(e):
-            await log_warning(request, e)
+            await log_warning(request, e, exc_info=True)
         raise
     except Exception as exc:
         logger.exception(

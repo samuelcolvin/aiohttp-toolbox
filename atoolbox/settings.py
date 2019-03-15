@@ -40,6 +40,7 @@ else:
 class BaseSettings(_BaseSettings):
     worker_func: str = None
     create_app: str = 'main.create_app'
+    patch_paths: List[str] = []
 
     sql_path: Path = 'models.sql'
     pg_dsn: Optional[str] = pg_dsn_default

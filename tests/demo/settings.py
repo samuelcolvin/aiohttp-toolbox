@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     pg_dsn: str = 'postgres://postgres@localhost:5432/atoolbox_demo'
     csrf_cross_origin_paths: List[Pattern] = ['/exec/', '/exec-simple/']
     csrf_upload_paths: List[Pattern] = ['/upload-path/']
+    patch_paths = ['math']
 
 
 @patch

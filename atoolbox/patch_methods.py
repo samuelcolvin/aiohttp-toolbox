@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from importlib import import_module
 from typing import Callable, Tuple
 
 from .settings import BaseSettings
@@ -29,6 +30,9 @@ def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[s
     except KeyError:
         logger.error('patch "%s" not found in patches: %s', patch_name, [p.func.__name__ for p in patches])
         return 1
+
+    for path in getattr(settings, 'patch_paths', []):
+        import_module(path)
 
     if patch.direct:
         if not live:
@@ -97,7 +101,7 @@ def patch(*args, direct=False):
 @patch
 async def rerun_sql(*, conn, settings, **kwargs):
     """
-    rerun the contents of settings.sql_path. WARNING: depending on how you've written your sql this may be dangerous.
+    rerun the contents of settings.sql_path.
     """
     # this require you to use "CREATE X IF NOT EXISTS" everywhere
     await conn.execute(settings.sql)

@@ -3,6 +3,11 @@
 History
 -------
 
+v0.3.2 (2019-03-15)
+...................
+* add ``patch_paths`` to settings
+* ``exc_info`` adding middleware warning
+
 v0.3.1 (2019-03-13)
 ...................
 * add ``auto`` command to CLI

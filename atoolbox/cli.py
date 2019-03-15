@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 import asyncio
 import locale
 import logging
@@ -49,7 +49,7 @@ def worker(args, settings: BaseSettings):
         wait_for_services(settings)
         worker_func(settings=settings)
     else:
-        raise CliError("settings.worker_path not set, can't run the worker")
+        raise CliError("settings.worker_func not set, can't run the worker")
 
 
 @command

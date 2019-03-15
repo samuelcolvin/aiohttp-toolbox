@@ -79,7 +79,7 @@ def test_worker(env, tmp_work_path):
 def test_no_worker(caplog, env):
     del os.environ['APP_WORKER_FUNC']
     assert 1 == cli_main('worker')
-    assert "settings.worker_path not set, can't run the worker" in caplog.text
+    assert "settings.worker_func not set, can't run the worker" in caplog.text
 
 
 def test_list_patches(caplog, env):
