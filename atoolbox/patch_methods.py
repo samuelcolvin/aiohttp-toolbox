@@ -24,15 +24,16 @@ def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[s
             )
         )
         return 0
+
+    for path in getattr(settings, 'patch_paths', []):
+        import_module(path)
+
     patch_lookup = {p.func.__name__: p for p in patches}
     try:
         patch = patch_lookup[patch_name]
     except KeyError:
         logger.error('patch "%s" not found in patches: %s', patch_name, [p.func.__name__ for p in patches])
         return 1
-
-    for path in getattr(settings, 'patch_paths', []):
-        import_module(path)
 
     if patch.direct:
         if not live:

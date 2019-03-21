@@ -17,6 +17,7 @@ from pydantic.utils import import_string
 from .logs import ColouredAccessLogger, setup_logging
 from .network import check_server, wait_for_services
 from .settings import BaseSettings
+from .version import VERSION
 
 logger = logging.getLogger('atoolbox.cli')
 commands: Dict[str, Optional[Callable]] = {'auto': None}
@@ -125,7 +126,7 @@ def get_auto_command():
 
 
 def main(*args) -> int:
-    parser = ArgumentParser(description='aiohttp-toolbox command line interface')
+    parser = ArgumentParser(description=f'aiohttp-toolbox command line interface v{VERSION}')
     parser.add_argument(
         'command',
         type=str,

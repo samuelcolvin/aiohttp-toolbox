@@ -3,6 +3,10 @@
 History
 -------
 
+v0.3.3 (2019-03-21)
+...................
+* tweak ``patch_paths``
+
 v0.3.2 (2019-03-15)
 ...................
 * add ``patch_paths`` to settings
