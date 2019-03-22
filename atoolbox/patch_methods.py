@@ -17,6 +17,9 @@ class Patch:
 
 
 def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[str, ...]):
+    for path in getattr(settings, 'patch_paths', []):
+        import_module(path)
+
     if patch_name is None:
         logger.info(
             'available patches:\n{}'.format(
@@ -24,9 +27,6 @@ def run_patch(settings: BaseSettings, patch_name: str, live: bool, args: Tuple[s
             )
         )
         return 0
-
-    for path in getattr(settings, 'patch_paths', []):
-        import_module(path)
 
     patch_lookup = {p.func.__name__: p for p in patches}
     try:
