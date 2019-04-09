@@ -32,10 +32,10 @@ async def spa_static_handler(request):
             raise HTTPNotFound()
         filepath = directory.joinpath(filename).resolve()
         filepath.relative_to(directory)
-    except Exception as e:
+    except Exception:  # pragma: no cover
         # perm error or other kind!
         logger.warning('error resolving path %r', request_path, exc_info=True)
-        raise HTTPNotFound() from e
+        filepath = directory
 
     if filepath.is_file():
         return FileResponse(filepath, headers=csp_headers)
