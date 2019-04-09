@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 
 from aiohttp import web
 from aiohttp_session import new_session
@@ -10,6 +11,9 @@ from atoolbox.bread import Bread
 from atoolbox.class_views import ExecView
 from atoolbox.test_utils import return_any_status
 from atoolbox.utils import JsonErrors, decrypt_json, encrypt_json, json_response
+from atoolbox.views import spa_static_handler
+
+THIS_DIR = Path(__file__).parent.resolve()
 
 
 async def handle_200(request):
@@ -125,8 +129,9 @@ async def create_app(settings):
         web.get('/decrypt/', decrypt),
         web.post('/grecaptcha/', grecaptcha),
         web.post('/upload-path/', handle_200),
+        web.get('/spa/{path:.*}', spa_static_handler),
         *OrganisationBread.routes('/orgs/'),
     ]
     app = await create_default_app(settings=settings, routes=routes)
-    app['middleware_log_user'] = get_user
+    app.update(middleware_log_user=get_user, static_dir=THIS_DIR / 'static')
     return app

@@ -145,7 +145,7 @@ def test_check_server_url_only(caplog, env):
 
 
 def test_check_server_default_args(caplog, env):
-    assert 1 == cli_main('check_web')
+    assert 1 == cli_main('check_web'), caplog.text
     assert 'checking server is running at "http://localhost:8000/" expecting 200...' in caplog.text
 
 
