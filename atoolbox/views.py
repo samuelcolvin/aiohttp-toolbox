@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 
-from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_fileresponse import FileResponse
 
 logger = logging.getLogger('atoolbox.views')
@@ -25,11 +24,11 @@ async def spa_static_handler(request):
     try:
         filename = Path(request_path)
         if filename.anchor:  # pragma: no cover
-            # windows only I think, but keep it just in case
+            # shouldn't happen on linux, but keep it just in case
             # request_path is an absolute name like
             # /static/\\machine_name\c$ or /static/D:\path
             # where the static dir is totally different
-            raise HTTPNotFound()
+            raise RuntimeError('request path has anchor')
         filepath = directory.joinpath(filename).resolve()
         filepath.relative_to(directory)
     except Exception:  # pragma: no cover
