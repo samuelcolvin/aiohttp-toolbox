@@ -3,6 +3,10 @@
 History
 -------
 
+v0.4.1 (unreleased)
+...................
+* 404 for ``.well-known/*`` urls in  ``spa_static_handler``
+
 v0.4.0 (2019-04-09)
 ...................
 * add ``spa_static_handler``

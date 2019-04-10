@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_fileresponse import FileResponse
 
 logger = logging.getLogger('atoolbox.views')
@@ -20,6 +21,10 @@ async def spa_static_handler(request):
     csp_headers = request.app.get('static_headers') or {}
     if request_path == '':
         return FileResponse(directory / 'index.html', headers=csp_headers)
+
+    # probably other paths to return 404 for?
+    if request_path.startswith('.well-known/'):
+        raise HTTPNotFound()
 
     try:
         filename = Path(request_path)

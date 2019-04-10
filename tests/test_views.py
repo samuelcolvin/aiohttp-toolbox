@@ -17,3 +17,8 @@ async def test_spa_css(cli):
     assert r.status == 200, await r.text()
     assert 'body {background: black;}\n' == await r.text()
     assert r.headers['Content-Type'] == 'text/css'
+
+
+async def test_well_known(cli):
+    r = await cli.get('/spa/.well-known/foobar')
+    assert r.status == 404, await r.text()
