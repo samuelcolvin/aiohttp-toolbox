@@ -36,6 +36,9 @@ else:
     # generate_key is used to avoid a public default value ever being used in production
     auth_key_default = Fernet.generate_key().decode()
 
+# see https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha-what-should-i-do
+GREPAPTCHA_TEST_SECRET = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+
 
 class BaseSettings(_BaseSettings):
     worker_func: str = None
@@ -66,7 +69,7 @@ class BaseSettings(_BaseSettings):
     cookie_name = 'aiohttp-app'
 
     grecaptcha_url = 'https://www.google.com/recaptcha/api/siteverify'
-    grecaptcha_secret = 'not-configured'
+    grecaptcha_secret = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
 
     @property
     def sql(self):

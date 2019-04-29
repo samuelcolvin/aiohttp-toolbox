@@ -3,7 +3,7 @@ import logging
 from pydantic import BaseModel
 
 from .exceptions import JsonErrors, RequestError
-from .settings import BaseSettings
+from .settings import GREPAPTCHA_TEST_SECRET, BaseSettings
 from .utils import get_ip, remove_port
 
 logger = logging.getLogger('atoolbox.auth')
@@ -22,8 +22,12 @@ async def check_grecaptcha(m: BaseModel, request, *, error_headers=None):
             raise RequestError(r.status, settings.grecaptcha_url, text=await r.text())
         data = await r.json()
 
-    if data['success'] and remove_port(request.host) == data['hostname']:
-        logger.info('grecaptcha success')
+    if data['success']:
+        hostname = data['hostname']
+        if remove_port(request.host) == hostname:
+            logger.info('grecaptcha success')
+        if hostname == 'testkey.google.com' and settings.grecaptcha_secret == GREPAPTCHA_TEST_SECRET:
+            logger.info('grecaptcha test key success')
     else:
         logger.warning(
             'grecaptcha failure, path="%s" ip=%s response=%s',
