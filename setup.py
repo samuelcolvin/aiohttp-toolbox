@@ -65,9 +65,9 @@ setup(
     extras_require={
         'all': [
             'aiohttp-session>=2.7.0',
-            'arq>=0.16a1',
+            'arq>=0.16b1',
             'asyncpg>=0.17.0',
-            'buildpg>=0.0.2',
+            'buildpg>=0.2.1',
             'cryptography>=2.4.1',
         ],
     }

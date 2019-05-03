@@ -11,8 +11,8 @@ from buildpg.asyncpg import BuildPgConnection
 from buildpg.clauses import Clause, Clauses, From, Join, Limit, OrderBy, Select, Where
 from pydantic import BaseModel
 
+from ..exceptions import JsonErrors
 from ..utils import (
-    JsonErrors,
     get_offset,
     json_response,
     parse_request_json,
@@ -212,7 +212,7 @@ class ReadBread(BaseBread):
 
     @as_clauses
     async def browse_count_query(self):
-        yield Select(funcs.count('*', as_='count_'))
+        yield Select(funcs.count('*').as_('count_'))
         yield self.from_()
         yield self.join()
         yield self.where()
