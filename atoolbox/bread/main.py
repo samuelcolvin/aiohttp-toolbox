@@ -12,13 +12,7 @@ from buildpg.clauses import Clause, Clauses, From, Join, Limit, OrderBy, Select,
 from pydantic import BaseModel
 
 from ..exceptions import JsonErrors
-from ..utils import (
-    get_offset,
-    json_response,
-    parse_request_json,
-    parse_request_json_ignore_missing,
-    raw_json_response,
-)
+from ..utils import get_offset, json_response, parse_request_json, parse_request_json_ignore_missing, raw_json_response
 
 logger = logging.getLogger('atoolbox.bread')
 
