@@ -22,7 +22,7 @@ lint:
 	python setup.py check -rms
 	flake8 atoolbox/ tests/
 	isort -rc --check-only atoolbox tests
-	black -S -l 120 --py36 --check atoolbox tests
+	black -S -l 120 --target-version py37 --check atoolbox tests
 
 .PHONY: test
 test:

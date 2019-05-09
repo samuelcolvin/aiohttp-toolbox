@@ -9,7 +9,7 @@ from aiohttp.test_utils import make_mocked_request
 from pydantic import BaseModel, BaseSettings as PydanticBaseSettings
 
 from atoolbox.create_app import cleanup, create_default_app, startup
-from atoolbox.db.helpers import SimplePgPool, run_sql_section
+from atoolbox.db.helpers import DummyPgPool, run_sql_section
 from atoolbox.logs import setup_logging
 from atoolbox.middleware import error_middleware
 from atoolbox.test_utils import Offline, create_dummy_server, return_any_status
@@ -77,7 +77,7 @@ async def test_run_sql_section_error():
 
 
 async def test_simple_pool(db_conn):
-    conn = SimplePgPool(db_conn)
+    conn = DummyPgPool(db_conn)
     assert 625 == await conn.fetchval('SELECT 25 * 25')
     assert (625,) == await conn.fetchrow('SELECT 25 * 25')
     assert [(625,)] == await conn.fetch('SELECT 25 * 25')

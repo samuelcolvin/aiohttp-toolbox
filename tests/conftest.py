@@ -77,9 +77,9 @@ async def redis(loop, settings):
 
 
 async def pre_startup_app(app):
-    from atoolbox.db.helpers import SimplePgPool
+    from atoolbox.db.helpers import DummyPgPool
 
-    app['pg'] = SimplePgPool(app['test_conn'])
+    app['pg'] = DummyPgPool(app['test_conn'])
 
 
 @pytest.fixture(name='cli')
