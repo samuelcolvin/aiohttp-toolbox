@@ -10,6 +10,7 @@ async-timeout==3.0.1
 buildpg==0.0.2
 cchardet==2.1.4
 cryptography==2.4.1
+ipython==7.7.0
 pydantic==0.20.1
 raven==6.10.0
 raven-aiohttp==0.7.0

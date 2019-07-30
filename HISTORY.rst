@@ -3,7 +3,11 @@
 History
 -------
 
-v0.4.1 (unreleased)
+v0.4.2 (unreleased)
+...................
+* add ``shell`` command, tweak dummy server request logging
+
+v0.4.1 (2019-04-29)
 ...................
 * 404 for ``.well-known/*`` urls in  ``spa_static_handler``
 * allow google recaptcha test keys

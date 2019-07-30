@@ -22,6 +22,12 @@ def test_reset_database(mocker, env):
     assert f.called
 
 
+def test_shell(mocker, env, caplog, tmp_work_path):
+    f = mocker.patch('IPython.start_ipython')
+    assert 0 == cli_main('shell')
+    assert f.called
+
+
 def mock_run_app(create_app, **kwargs):
     loop = asyncio.get_event_loop()
     app = loop.run_until_complete(create_app)

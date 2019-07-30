@@ -32,7 +32,7 @@ async def grecaptcha_dummy(request):
 
 @middleware
 async def log_middleware(request, handler):
-    request.app['log'].append(request.method + ' ' + request.path.strip('/'))
+    request.app['log'].append(request.method + ' ' + request.path_qs)
     return await handler(request)
 
 

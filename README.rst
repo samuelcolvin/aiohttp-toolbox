@@ -8,7 +8,7 @@ Tools for aiohttp I want to reuse.
 Installation
 ------------
 
-Requires **python 3.6** or **python 3.7**.
+Requires **python 3.7**.
 
 .. code:: shell
 

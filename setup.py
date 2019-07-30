@@ -1,14 +1,14 @@
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
+
 from setuptools import setup
 
 description = 'Tools for aiohttp I want to reuse.'
 THIS_DIR = Path(__file__).resolve().parent
 try:
-    long_description = '\n\n'.join([
-        THIS_DIR.joinpath('README.rst').read_text(),
-        THIS_DIR.joinpath('HISTORY.rst').read_text()
-    ])
+    long_description = '\n\n'.join(
+        [THIS_DIR.joinpath('README.rst').read_text(), THIS_DIR.joinpath('HISTORY.rst').read_text()]
+    )
 except FileNotFoundError:
     long_description = description
 
@@ -25,7 +25,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: System Administrators',
@@ -39,17 +39,13 @@ setup(
     author_email='s@muelcolvin.com',
     url='https://github.com/samuelcolvin/aiohttp-tools',
     license='MIT',
-    packages=[
-        'atoolbox',
-        'atoolbox.bread',
-        'atoolbox.db',
-    ],
+    packages=['atoolbox', 'atoolbox.bread', 'atoolbox.db'],
     entry_points="""
         [console_scripts]
         atoolbox=atoolbox.cli:cli
         aiohttp_toolbox=atoolbox.cli:cli
     """,
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     zip_safe=True,
     install_requires=[
         'aiodns>=2.0.0',
@@ -69,6 +65,7 @@ setup(
             'asyncpg>=0.17.0',
             'buildpg>=0.2.1',
             'cryptography>=2.4.1',
-        ],
-    }
+            'ipython>=7.7.0',
+        ]
+    },
 )

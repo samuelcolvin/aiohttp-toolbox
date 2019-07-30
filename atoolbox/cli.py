@@ -99,6 +99,41 @@ def check_web(args, settings: BaseSettings):
     return check_server(url, exp_status)
 
 
+@command
+def shell(args, settings: BaseSettings):
+    """
+    Run an interactive python shell
+    """
+    from IPython import start_ipython
+    from IPython.terminal.ipapp import load_default_config
+
+    c = load_default_config()
+
+    settings_path, settings_name = args.settings_path.rsplit('.', 1)
+    exec_lines = [
+        'import asyncio, base64, math, hashlib, json, os, pickle, re, secrets, sys, time',
+        'from datetime import datetime, date, timedelta, timezone',
+        'from pathlib import Path',
+        'from pprint import pprint as pp',
+        '',
+        f'root_dir = "{args.root}"',
+        'sys.path.append(root_dir)',
+        'os.chdir(root_dir)',
+        '',
+        f'from {settings_path} import {settings_name}',
+        'settings = Settings()',
+    ]
+    exec_lines += ['print("\\n    Python {v.major}.{v.minor}.{v.micro}\\n".format(v=sys.version_info))'] + [
+        f"print('    {l}')" for l in exec_lines
+    ]
+
+    c.TerminalIPythonApp.display_banner = False
+    c.TerminalInteractiveShell.confirm_exit = False
+    c.InteractiveShellApp.exec_lines = exec_lines
+
+    start_ipython(argv=(), config=c)
+
+
 class CliError(RuntimeError):
     pass
 
@@ -137,6 +172,7 @@ def main(*args) -> int:
         ),
     )
     parser.add_argument(
+        '-r',
         '--root',
         dest='root',
         default=os.getenv('ATOOLBOX_ROOT_DIR', '.'),
@@ -146,6 +182,7 @@ def main(*args) -> int:
         ),
     )
     parser.add_argument(
+        '-s',
         '--settings-path',
         dest='settings_path',
         default=os.getenv('ATOOLBOX_SETTINGS', 'settings.Settings'),
@@ -154,7 +191,7 @@ def main(*args) -> int:
             '"ATOOLBOX_SETTINGS" or "settings.Settings"'
         ),
     )
-    parser.add_argument('--verbose', action='store_true', help='whether to pring debug logs')
+    parser.add_argument('--verbose', action='store_true', help='whether to print debug logs')
     parser.add_argument(
         '--log',
         default=os.getenv('ATOOLBOX_LOG_NAME', 'app'),
@@ -185,9 +222,9 @@ def main(*args) -> int:
     logging_client = setup_logging(debug=ns.verbose, main_logger_name=ns.log)
     try:
         sys.path.append(os.getcwd())
-        root_dir = str(Path(ns.root).resolve())
-        sys.path.append(root_dir)
-        os.chdir(root_dir)
+        ns.root = Path(ns.root).resolve()
+        sys.path.append(str(ns.root))
+        os.chdir(str(ns.root))
 
         try:
             settings_cls = import_string(ns.settings_path)
