@@ -3,9 +3,11 @@
 History
 -------
 
-v0.4.2 (unreleased)
+v0.4.4 (2019-07-30)
 ...................
-* add ``shell`` command, tweak dummy server request logging
+* add ``shell`` command
+* tweak dummy server request logging
+* upgrade ``arq`` to ``v0.16``
 
 v0.4.1 (2019-04-29)
 ...................

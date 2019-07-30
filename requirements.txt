@@ -4,7 +4,7 @@
 aiodns==2.0.0
 aiohttp==3.5.4
 aiohttp-session==2.7.0
-arq==0.16a1
+arq==0.16
 asyncpg==0.17.0
 async-timeout==3.0.1
 buildpg==0.0.2
