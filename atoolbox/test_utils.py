@@ -8,6 +8,7 @@ import aiodns
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 from aiohttp.web import Application
+from aiohttp.web_exceptions import HTTPException
 from aiohttp.web_middlewares import middleware
 from aiohttp.web_response import Response, json_response
 from async_timeout import timeout
@@ -21,7 +22,7 @@ async def return_any_status(request):
 
 async def grecaptcha_dummy(request):
     data = await request.post()
-    request.app['log'][-1] = 'grecaptcha {response}'.format(**data)
+    request['log_msg'] = 'grecaptcha {response}'.format(**data)
     if data['response'] == '__ok__':
         return json_response(dict(success=True, hostname='127.0.0.1'))
     elif data['response'] == '__400__':
@@ -32,8 +33,18 @@ async def grecaptcha_dummy(request):
 
 @middleware
 async def log_middleware(request, handler):
-    request.app['log'].append(request.method + ' ' + request.path_qs)
-    return await handler(request)
+    try:
+        r = await handler(request)
+    except Exception as e:
+        status = e.status if isinstance(e, HTTPException) else 500
+        request.app['log'].append(f'{request.method} {request.path_qs} > {status}')
+        raise
+    else:
+        log = f'{request.method} {request.path_qs} > {r.status}'
+        if 'log_msg' in request:
+            log += ' ({})'.format(request['log_msg'])
+        request.app['log'].append(log)
+        return r
 
 
 def create_dummy_app() -> Application:

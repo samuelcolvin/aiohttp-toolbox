@@ -5,7 +5,7 @@ async def test_grecaptcha_ok(cli, dummy_server):
     assert r.status == 200, await r.text()
     obj = await r.json()
     assert obj == {'v_squared': 16}
-    assert dummy_server.log == ['grecaptcha __ok__']
+    assert dummy_server.log == ['POST /grecaptcha_url/ > 200 (grecaptcha __ok__)']
 
 
 async def test_grecaptcha_wrong(cli, dummy_server):
@@ -14,7 +14,7 @@ async def test_grecaptcha_wrong(cli, dummy_server):
     assert r.status == 400, await r.text()
     obj = await r.json()
     assert obj == {'message': 'Invalid recaptcha value'}
-    assert dummy_server.log == ['grecaptcha wrong']
+    assert dummy_server.log == ['POST /grecaptcha_url/ > 200 (grecaptcha wrong)']
 
 
 async def test_grecaptcha_missing(cli, dummy_server):
