@@ -94,7 +94,7 @@ async def parse_request_json_ignore_missing(
     if not isinstance(raw_data, dict):
         raise JsonErrors.HTTPBadRequest(message='data not a dictionary', headers=headers)
 
-    data, e = validate_model(model, raw_data, raise_exc=False)
+    data, _, e = validate_model(model, raw_data, raise_exc=False)
     if e:
         errors = [e for e in e.errors() if not (e['type'] == 'value_error.missing' and len(e['loc']) == 1)]
         if errors:
