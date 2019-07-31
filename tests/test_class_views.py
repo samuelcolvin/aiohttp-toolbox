@@ -70,6 +70,13 @@ async def test_no_headers_error(cli):
     obj = await r.json()
     assert obj == {
         'message': 'Invalid Data',
-        'details': [{'loc': ['v'], 'msg': 'value is not a valid enumeration member', 'type': 'type_error.enum'}],
+        'details': [
+            {
+                'loc': ['v'],
+                'msg': "value is not a valid enumeration member; permitted: 'ping', 'pong'",
+                'type': 'type_error.enum',
+                'ctx': {'enum_values': ['ping', 'pong']},
+            }
+        ],
     }
     assert r.headers.keys() == {'Content-Type', 'Content-Length', 'Date', 'Server'}

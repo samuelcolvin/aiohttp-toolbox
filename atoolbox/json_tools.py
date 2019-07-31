@@ -1,7 +1,6 @@
-import datetime
 import json
-from decimal import Decimal
-from uuid import UUID
+
+from pydantic.json import pydantic_encoder
 
 JSON_CONTENT_TYPE = 'application/json'
 
@@ -10,28 +9,8 @@ def _isoformat(o):
     return o._isoformat()
 
 
-class UniversalEncoder(json.JSONEncoder):
-    ENCODER_BY_TYPE = {
-        UUID: str,
-        datetime.datetime: _isoformat,
-        datetime.date: _isoformat,
-        datetime.time: _isoformat,
-        set: list,
-        frozenset: list,
-        bytes: lambda o: o.decode(),
-        Decimal: str,
-    }
-
-    def default(self, obj):
-        try:
-            encoder = self.ENCODER_BY_TYPE[type(obj)]
-        except KeyError:
-            return super().default(obj)
-        return encoder(obj)
-
-
 def pretty_lenient_json(data):
-    return json.dumps(data, indent=2, cls=UniversalEncoder) + '\n'
+    return json.dumps(data, indent=2, default=pydantic_encoder) + '\n'
 
 
 def lenient_json(v):

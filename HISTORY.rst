@@ -8,6 +8,7 @@ v0.4.4 (2019-07-31)
 * add ``shell`` command
 * tweak dummy server request logging, add response code
 * upgrade ``arq`` to ``v0.16``
+* upgrade ``pydantic`` to ``v0.31.1``
 
 v0.4.1 (2019-04-29)
 ...................

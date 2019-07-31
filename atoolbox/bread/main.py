@@ -329,7 +329,7 @@ class Bread(ReadBread):
         await self.check_item_permissions(pk)
         m, raw_data = await parse_request_json_ignore_missing(self.request, self.Model)
 
-        data = await self.prepare_edit_data(pk, m.dict(include=raw_data.keys()))
+        data = await self.prepare_edit_data(pk, m.dict(include=set(raw_data.keys())))
         if not data:
             raise JsonErrors.HTTPBadRequest(message=f'no data to save')
 
