@@ -9,7 +9,7 @@ from aiohttp.test_utils import make_mocked_request
 from pydantic import BaseModel, BaseSettings as PydanticBaseSettings
 
 from atoolbox.create_app import cleanup, create_default_app, startup
-from atoolbox.db.helpers import DummyPgPool, run_sql_section
+from atoolbox.db.helpers import DummyPgPool, TimedLock, run_sql_section
 from atoolbox.logs import setup_logging
 from atoolbox.middleware import error_middleware
 from atoolbox.test_utils import Offline, create_dummy_server, return_any_status
@@ -77,11 +77,14 @@ async def test_run_sql_section_error():
 
 
 async def test_simple_pool(db_conn):
-    conn = DummyPgPool(db_conn)
-    assert 625 == await conn.fetchval('SELECT 25 * 25')
-    assert (625,) == await conn.fetchrow('SELECT 25 * 25')
-    assert [(625,)] == await conn.fetch('SELECT 25 * 25')
-    assert 'SELECT 1' == await conn.execute('SELECT 25 * 25')
+    pool = DummyPgPool(db_conn)
+    assert 625 == await pool.fetchval('SELECT 25 * 25')
+    assert (625,) == await pool.fetchrow('SELECT 25 * 25')
+    assert [(625,)] == await pool.fetch('SELECT 25 * 25')
+    assert 'SELECT 1' == await pool.execute('SELECT 25 * 25')
+    async with pool.acquire() as conn:
+        assert 625 == await conn.fetchval('SELECT 25 * 25')
+        assert repr(conn).startswith("<DummyPgConn ('localhost', 5432) ConnectionParameters(user='postgres'")
 
 
 @pytest.mark.parametrize(
@@ -245,3 +248,13 @@ def test_error_repr():
 
 def test_error_str():
     assert repr(JsonErrors.HTTPNotFound('whatever')) == '<HTTPNotFound Not Found not prepared>, 404: whatever'
+
+
+async def test_timed_lock():
+    lock = TimedLock(timeout=0.1)
+    assert not lock.locked()
+    async with lock:
+        assert lock.locked()
+
+        with pytest.raises(asyncio.TimeoutError, match='DummyPg query lock timed out'):
+            await lock.acquire()

@@ -3,6 +3,10 @@
 History
 -------
 
+v0.4.5 (unreleased)
+...................
+* ``repr`` and timeout for ``DummyPgPool``
+
 v0.4.4 (2019-07-31)
 ...................
 * add ``shell`` command

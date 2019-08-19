@@ -1,14 +1,27 @@
 import asyncio
 import re
+from typing import Optional
 
 from asyncpg import Connection
 
 
+class TimedLock(asyncio.Lock):
+    def __init__(self, *, loop=None, timeout=0.5):
+        self.timeout = timeout
+        super().__init__(loop=loop)
+
+    async def acquire(self):
+        try:
+            await asyncio.wait_for(super().acquire(), timeout=self.timeout)
+        except asyncio.TimeoutError as e:
+            raise asyncio.TimeoutError('DummyPg query lock timed out') from e
+
+
 class _LockedExecute:
-    def __init__(self, conn, lock=None):
+    def __init__(self, conn: Connection, lock: Optional[TimedLock] = None):
         self._conn: Connection = conn
         # could also add lock to each method of the returned connection
-        self._lock: asyncio.Lock = lock or asyncio.Lock(loop=self._conn._loop)
+        self._lock: TimedLock = lock or TimedLock(loop=self._conn._loop)
 
     async def execute(self, *args, **kwargs):
         async with self._lock:
@@ -65,11 +78,14 @@ class DummyPgConn(_LockedExecute):
     def transaction(self):
         return DummyPgTransaction(self._conn, self._lock)
 
+    def __repr__(self) -> str:
+        return f'<DummyPgConn {self._conn._addr} {self._conn._params}>'
+
 
 class _ConnAcquire:
-    def __init__(self, conn, lock):
-        self._conn: Connection = conn
-        self._lock: asyncio.Lock = lock
+    def __init__(self, conn: Connection, lock: TimedLock):
+        self._conn = conn
+        self._lock = lock
 
     async def __aenter__(self):
         return DummyPgConn(self._conn, self._lock)
@@ -89,6 +105,9 @@ class DummyPgPool(DummyPgConn):
 
     async def close(self):
         pass
+
+    def __repr__(self) -> str:
+        return f'<DummyPgPool {self._conn._addr} {self._conn._params}>'
 
 
 async def update_enums(enums, conn):
