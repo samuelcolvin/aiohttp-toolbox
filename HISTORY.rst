@@ -3,6 +3,10 @@
 History
 -------
 
+v0.5.1 (2019-08-20)
+...................
+* upgrade pypi deploy to use API tokens
+
 v0.5 (2019-08-20)
 .................
 * ``repr`` and timeout for ``DummyPgPool``
