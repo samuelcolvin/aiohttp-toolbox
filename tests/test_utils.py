@@ -10,7 +10,6 @@ from pydantic import BaseModel, BaseSettings as PydanticBaseSettings
 
 from atoolbox.create_app import cleanup, create_default_app, startup
 from atoolbox.db.helpers import DummyPgPool, TimedLock, run_sql_section
-from atoolbox.logs import setup_logging
 from atoolbox.middleware import error_middleware
 from atoolbox.test_utils import Offline, create_dummy_server, return_any_status
 from atoolbox.utils import JsonErrors, get_ip, parse_request_query, raw_json_response, slugify
@@ -45,17 +44,6 @@ async def test_decrypt_invalid(cli):
     assert r.status == 400, await r.text()
     data = await r.json()
     assert data == {'message': 'invalid token'}
-
-
-def test_logging_no_raven():
-    os.environ['SENTRY_DSN'] = '-'
-    assert setup_logging() is None
-
-
-def test_logging_raven():
-    os.environ['SENTRY_DSN'] = 'https://123:456@sentry.io/789'
-    os.environ['RELEASE'] = 'testing'
-    assert setup_logging() is not None
 
 
 async def test_run_sql_section():

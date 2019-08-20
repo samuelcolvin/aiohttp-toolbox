@@ -4,6 +4,7 @@ import os
 import traceback
 from datetime import datetime, timedelta
 from io import StringIO
+from typing import Any, Dict
 
 from aiohttp.abc import AbstractAccessLogger
 from aiohttp.hdrs import METH_POST
@@ -135,7 +136,7 @@ def get_env_multiple(*names):
             return v
 
 
-def build_logging_config(debug, disable_existing, main_logger_name):
+def build_logging_config(debug: bool, disable_existing: bool, main_logger_name: str) -> Dict[str, Any]:
     """
     setup logging config by updating the arq logging config
     """
@@ -145,18 +146,17 @@ def build_logging_config(debug, disable_existing, main_logger_name):
         # thus setting an environment variable of "-" means no sentry
         sentry_dsn = None
 
-    client = None
     if sentry_dsn:
-        from raven import Client
-        from raven_aiohttp import AioHttpTransport
+        import sentry_sdk
+        from sentry_sdk.integrations.logging import LoggingIntegration
 
-        client = Client(
-            transport=AioHttpTransport,
+        sentry_sdk.init(
             dsn=sentry_dsn,
+            integrations=[LoggingIntegration(level=logging.INFO, event_level=logging.WARNING)],
             release=get_env_multiple('COMMIT', 'RELEASE'),
-            name=get_env_multiple('DYNO', 'SERVER_NAME', 'HOSTNAME', 'HOST', 'NAME'),
+            server_name=get_env_multiple('DYNO', 'SERVER_NAME', 'HOSTNAME', 'HOST', 'NAME'),
         )
-        warning_handler = {'level': 'WARNING', 'class': 'raven.handlers.logging.SentryHandler', 'client': client}
+        warning_handler = {'level': 'WARNING', 'class': 'logging.StreamHandler'}
         default_filters = []
     else:
         warning_handler = {
@@ -197,10 +197,9 @@ def build_logging_config(debug, disable_existing, main_logger_name):
             'arq': {'handlers': ['atoolbox.default', 'atoolbox.warning'], 'level': log_level},
         },
     }
-    return config, client
+    return config
 
 
-def setup_logging(debug=False, disable_existing=False, main_logger_name='app'):
-    config, client = build_logging_config(debug, disable_existing, main_logger_name)
+def setup_logging(debug: bool = False, disable_existing: bool = False, main_logger_name: str = 'app') -> None:
+    config = build_logging_config(debug, disable_existing, main_logger_name)
     logging.config.dictConfig(config)
-    return client

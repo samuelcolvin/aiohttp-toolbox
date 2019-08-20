@@ -3,6 +3,10 @@
 History
 -------
 
+v0.5.2 (2019-08-20)
+...................
+* switch from raven to sentry-sdk
+
 v0.5.1 (2019-08-20)
 ...................
 * upgrade pypi deploy to use API tokens

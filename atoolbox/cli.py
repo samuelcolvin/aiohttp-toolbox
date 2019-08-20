@@ -219,7 +219,7 @@ def main(*args) -> int:
 
     ns.extra.extend(extra)
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    logging_client = setup_logging(debug=ns.verbose, main_logger_name=ns.log)
+    setup_logging(debug=ns.verbose, main_logger_name=ns.log)
     try:
         sys.path.append(os.getcwd())
         ns.root = Path(ns.root).resolve()
@@ -242,11 +242,6 @@ def main(*args) -> int:
     except CliError as exc:
         logger.error('%s', exc)
         return 1
-    finally:
-        loop = asyncio.get_event_loop()
-        if logging_client and not loop.is_closed():
-            transport = logging_client.remote.get_transport()
-            transport and loop.run_until_complete(transport.close())
 
 
 def cli():  # pragma: no cover
