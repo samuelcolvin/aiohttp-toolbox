@@ -62,8 +62,7 @@ def test_format_size(size, output):
 
 
 def test_build_logging_config():
-    config, client = build_logging_config(True, False, 'app')
-    assert client is None
+    config = build_logging_config(True, False, 'app')
     assert config['disable_existing_loggers'] is False
     assert config['handlers']['atoolbox.default']['level'] == 'DEBUG'
     assert config['handlers']['atoolbox.warning']['class'] == 'atoolbox.logs.HighlightStreamHandler'
@@ -74,11 +73,10 @@ def test_build_logging_config():
 def test_build_logging_config_sentry():
     os.environ['SENTRY_DSN'] = 'https://thekey@sentry.io/123456789'
     try:
-        config, client = build_logging_config(False, True, 'foobar')
-        assert client is not None
+        config = build_logging_config(False, True, 'foobar')
         assert config['disable_existing_loggers'] is True
         assert config['handlers']['atoolbox.default']['level'] == 'INFO'
-        assert config['handlers']['atoolbox.warning']['class'] == 'raven.handlers.logging.SentryHandler'
+        assert config['handlers']['atoolbox.warning']['class'] == 'logging.StreamHandler'
 
         assert 'foobar' in config['loggers']
         assert 'app' not in config['loggers']

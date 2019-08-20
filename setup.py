@@ -53,9 +53,8 @@ setup(
         'async-timeout>=3.0.1',
         'cchardet>=2.1.4',
         'dataclasses>=0.6;python_version<"3.7"',
-        'pydantic>=0.31.1',
-        'raven>=6.10.0',
-        'raven-aiohttp>=0.7.0',
+        'pydantic>=0.32.2',
+        'sentry-sdk>=0.11.1',
         'uvloop>=0.11.2',
     ],
     extras_require={
