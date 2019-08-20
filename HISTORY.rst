@@ -3,10 +3,11 @@
 History
 -------
 
-v0.4.5 (unreleased)
-...................
+v0.5 (2019-08-20)
+.................
 * ``repr`` and timeout for ``DummyPgPool``
 * improve error middleware for better fingerprint in ``log_warning``
+* improve error middleware for better compatibility with sentry
 
 v0.4.4 (2019-07-31)
 ...................

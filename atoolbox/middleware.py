@@ -1,6 +1,7 @@
 import contextlib
 import logging
 from time import time
+from typing import Optional
 
 from aiohttp.abc import Request
 from aiohttp.hdrs import METH_GET, METH_OPTIONS, METH_POST
@@ -29,30 +30,24 @@ def exc_extra(exc):
             return lenient_json(v)
 
 
-async def log_extra(request, response=None, **more):
+async def log_extra(request: Request, response: Optional[Response] = None, **more):
     request_text = response_text = None
     with contextlib.suppress(Exception):  # UnicodeDecodeError or HTTPRequestEntityTooLarge maybe other things too
         request_text = await request.text()
     with contextlib.suppress(Exception):  # UnicodeDecodeError
         response_text = lenient_json(getattr(response, 'text', None))
-    start = request.get('start_time') or time()
+    start = request.get('start_time')
+    if start:
+        duration = f'{(time() - start) * 1000:0.2f}ms'
+    else:
+        duration = None
+    response_status = getattr(response, 'status', None)
     data = dict(
-        request_duration=f'{(time() - start) * 1000:0.2f}ms',
-        request=dict(
-            url=str(request.rel_url),
-            user_agent=request.headers.get('User-Agent'),
-            method=request.method,
-            host=request.host,
-            headers=dict(request.headers),
-            text=lenient_json(request_text),
-        ),
-        response=dict(
-            status=getattr(response, 'status', None), headers=dict(getattr(response, 'headers', {})), text=response_text
-        ),
+        request_duration=duration,
+        response=dict(status=response_status, headers=dict(getattr(response, 'headers', {})), text=response_text),
         **more,
     )
 
-    tags = dict()
     user = dict(ip_address=get_ip(request))
     get_user = request.app.get('middleware_log_user')
     if get_user:
@@ -60,22 +55,36 @@ async def log_extra(request, response=None, **more):
             user.update(await get_user(request))
         except Exception:
             logger.exception('error getting user for middleware logging')
-    return dict(data=data, user=user, tags=tags)
-
-
-async def log_warning(request: Request, response: Response, exc_info=False):
     try:
         view_name = request.match_info.route.name or request.match_info.route.resource.canonical
     except AttributeError:
         view_name = None
-    view_name = view_name or str(request.rel_url)
+    return dict(
+        data=data,
+        user=user,
+        fingerprint=(view_name or str(request.rel_url), str(response_status)),
+        request=dict(
+            url=str(request.url),
+            query_string=request.query_string,
+            fragment=request.url.fragment,
+            cookies=list(request.cookies.items()),
+            headers=list(request.headers.items()),
+            method=request.method,
+            data=lenient_json(request_text),
+            inferred_content_type=request.content_type,
+            env={'REMOTE_ADDR': user['ip_address'], 'DURATION': duration},
+        ),
+    )
+
+
+async def log_warning(request: Request, response: Optional[Response], exc_info: bool = False):
+    try:
+        extra = await log_extra(request, response)
+    except Exception:  # pragma: no cover
+        logger.critical('error getting extra data for request', exc_info=True)
+        extra = None
     logger.warning(
-        '%s %s unexpected response %d',
-        request.method,
-        request.rel_url,
-        response.status,
-        exc_info=exc_info,
-        extra={'fingerprint': (view_name, str(response.status)), **await log_extra(request, response)},
+        '%s %s unexpected response %d', request.method, request.rel_url, response.status, exc_info=exc_info, extra=extra
     )
 
 
