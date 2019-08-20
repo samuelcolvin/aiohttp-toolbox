@@ -118,8 +118,8 @@ async def get_user(request):
 
 async def create_app(settings):
     routes = [
-        web.get('/', handle_200),
-        web.route('*', r'/status/{status:\d+}/', return_any_status),
+        web.get('/', handle_200, name='index'),
+        web.route('*', r'/status/{status:\d+}/', return_any_status, name='any-status'),
         web.get('/user/', handle_user),
         web.get('/request-context/', request_context),
         web.get('/errors/{do}', handle_errors),

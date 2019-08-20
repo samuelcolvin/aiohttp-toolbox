@@ -28,6 +28,34 @@ async def test_500(cli, caplog):
     assert record.data['response']['text'] == 'custom 500 error'
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
     assert record.tags == {}
+    assert record.fingerprint == ('/errors/{do}', '500')
+
+
+async def test_503_with_name(cli, caplog):
+    r = await cli.get('/status/503/')
+    assert r.status == 503, await r.text()
+    assert 'test response with status 503' == await r.text()
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert record.data.keys() == {'request_duration', 'request', 'response'}
+    assert record.data['response']['text'] == 'test response with status 503'
+    assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
+    assert record.tags == {}
+    assert record.fingerprint == ('any-status', '503')
+
+
+async def test_405(cli, caplog):
+    r = await cli.post('/')
+    assert r.status == 405, await r.text()
+    assert '405: Method Not Allowed' == await r.text()
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert record.data.keys() == {'request_duration', 'request', 'response'}
+    assert record.data['request']['text'] == ''
+    assert record.data['response']['text'] == '405: Method Not Allowed'
+    assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
+    assert record.tags == {}
+    assert record.fingerprint == ('/', '405')
 
 
 async def test_not_unicode(cli, caplog):

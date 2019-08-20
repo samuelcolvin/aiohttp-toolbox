@@ -6,6 +6,7 @@ History
 v0.4.5 (unreleased)
 ...................
 * ``repr`` and timeout for ``DummyPgPool``
+* improve error middleware for better fingerprint in ``log_warning``
 
 v0.4.4 (2019-07-31)
 ...................

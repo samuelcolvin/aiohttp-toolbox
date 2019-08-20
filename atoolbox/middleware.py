@@ -2,6 +2,7 @@ import contextlib
 import logging
 from time import time
 
+from aiohttp.abc import Request
 from aiohttp.hdrs import METH_GET, METH_OPTIONS, METH_POST
 from aiohttp.web_exceptions import HTTPException, HTTPInternalServerError
 from aiohttp.web_middlewares import middleware
@@ -62,14 +63,19 @@ async def log_extra(request, response=None, **more):
     return dict(data=data, user=user, tags=tags)
 
 
-async def log_warning(request, response, exc_info=False):
+async def log_warning(request: Request, response: Response, exc_info=False):
+    try:
+        view_name = request.match_info.route.name or request.match_info.route.resource.canonical
+    except AttributeError:
+        view_name = None
+    view_name = view_name or str(request.rel_url)
     logger.warning(
         '%s %s unexpected response %d',
         request.method,
         request.rel_url,
         response.status,
         exc_info=exc_info,
-        extra={'fingerprint': [request.rel_url, str(response.status)], **await log_extra(request, response)},
+        extra={'fingerprint': (view_name, str(response.status)), **await log_extra(request, response)},
     )
 
 

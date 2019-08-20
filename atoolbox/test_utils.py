@@ -52,7 +52,7 @@ def create_dummy_app() -> Application:
     app.add_routes(
         [
             web.route('*', r'/status/{status:\d+}/', return_any_status, name='any-status'),
-            web.post(r'/grecaptcha_url/', grecaptcha_dummy, name='grecaptcha-dummy'),
+            web.post('/grecaptcha_url/', grecaptcha_dummy, name='grecaptcha-dummy'),
         ]
     )
     app['log'] = []
