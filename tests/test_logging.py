@@ -76,9 +76,14 @@ def test_build_logging_config_sentry():
         config = build_logging_config(False, True, 'foobar')
         assert config['disable_existing_loggers'] is True
         assert config['handlers']['atoolbox.default']['level'] == 'INFO'
-        assert config['handlers']['atoolbox.warning']['class'] == 'logging.StreamHandler'
+        assert config['handlers']['atoolbox.warning']['class'] == 'logging.NullHandler'
 
         assert 'foobar' in config['loggers']
         assert 'app' not in config['loggers']
     finally:
         os.environ.pop('SENTRY_DSN')
+        from sentry_sdk.hub import _initial_client as sentry_client_ref
+
+        sentry_client = sentry_client_ref()
+        assert sentry_client.dsn == 'https://thekey@sentry.io/123456789'
+        sentry_client.close()

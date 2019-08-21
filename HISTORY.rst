@@ -3,6 +3,10 @@
 History
 -------
 
+v0.5.3 (2019-08-21)
+...................
+* Switch to direct usage of sentry-sdk (sigh)
+
 v0.5.2 (2019-08-20)
 ...................
 * switch from raven to sentry-sdk
