@@ -1,7 +1,7 @@
 import contextlib
 import logging
 from time import time
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 
 from aiohttp.abc import Request
 from aiohttp.hdrs import METH_GET, METH_OPTIONS, METH_POST
@@ -9,6 +9,8 @@ from aiohttp.web_exceptions import HTTPException, HTTPInternalServerError
 from aiohttp.web_middlewares import middleware
 from aiohttp.web_response import Response
 from aiohttp.web_urldispatcher import MatchInfoError
+from sentry_sdk import capture_event
+from sentry_sdk.utils import event_from_exception, exc_info_from_error
 from yarl import URL
 
 from .json_tools import lenient_json
@@ -30,23 +32,18 @@ def exc_extra(exc):
             return lenient_json(v)
 
 
-async def log_extra(request: Request, response: Optional[Response] = None, **more):
-    request_text = response_text = None
-    with contextlib.suppress(Exception):  # UnicodeDecodeError or HTTPRequestEntityTooLarge maybe other things too
-        request_text = await request.text()
-    with contextlib.suppress(Exception):  # UnicodeDecodeError
-        response_text = lenient_json(getattr(response, 'text', None))
+async def event_extra(request: Request, response: Optional[Response] = None, **more) -> Tuple[str, Dict[str, Any]]:
     start = request.get('start_time')
     if start:
         duration = f'{(time() - start) * 1000:0.2f}ms'
     else:
         duration = None
-    response_status = getattr(response, 'status', None)
-    data = dict(
-        request_duration=duration,
-        response=dict(status=response_status, headers=dict(getattr(response, 'headers', {})), text=response_text),
-        **more,
-    )
+
+    request_text = response_text = None
+    with contextlib.suppress(Exception):  # UnicodeDecodeError or HTTPRequestEntityTooLarge maybe other things too
+        request_text = await request.text()
+    with contextlib.suppress(Exception):  # UnicodeDecodeError
+        response_text = lenient_json(getattr(response, 'text', None))
 
     user = dict(ip_address=get_ip(request))
     get_user = request.app.get('middleware_log_user')
@@ -55,18 +52,29 @@ async def log_extra(request: Request, response: Optional[Response] = None, **mor
             user.update(await get_user(request))
         except Exception:
             logger.exception('error getting user for middleware logging')
+
     try:
         view_name = request.match_info.route.name or request.match_info.route.resource.canonical
     except AttributeError:
         view_name = None
-    return dict(
-        data=data,
+    view_name = view_name or str(request.rel_url)
+
+    response_status = getattr(response, 'status', 500)
+    msg = f'{request.method} {view_name} unexpected response {response_status}'
+    event_data = dict(
+        level='warning',
+        logger='atoolbox.middleware',
+        extra=dict(
+            request_duration=duration,
+            response=dict(status=response_status, headers=dict(getattr(response, 'headers', {})), text=response_text),
+            **more,
+        ),
         user=user,
-        fingerprint=(view_name or str(request.rel_url), str(response_status)),
+        transaction=view_name,
+        fingerprint=(view_name, str(response_status)),
         request=dict(
             url=str(request.url),
             query_string=request.query_string,
-            fragment=request.url.fragment,
             cookies=list(request.cookies.items()),
             headers=list(request.headers.items()),
             method=request.method,
@@ -75,17 +83,23 @@ async def log_extra(request: Request, response: Optional[Response] = None, **mor
             env={'REMOTE_ADDR': user['ip_address'], 'DURATION': duration},
         ),
     )
+    return msg, event_data
 
 
-async def log_warning(request: Request, response: Optional[Response], exc_info: bool = False):
+async def log_warning(request: Request, response: Optional[Response]):
     try:
-        extra = await log_extra(request, response)
+        message, event = await event_extra(request, response)
     except Exception:  # pragma: no cover
         logger.critical('error getting extra data for request', exc_info=True)
-        extra = None
-    logger.warning(
-        '%s %s unexpected response %d', request.method, request.rel_url, response.status, exc_info=exc_info, extra=extra
-    )
+        return
+    logger.warning(message, extra=event)
+
+    if isinstance(response, Exception):
+        exc_data, hint = event_from_exception(exc_info_from_error(response))
+        event.update(message=message, **exc_data)
+        capture_event(event, hint)
+    else:
+        capture_event(event)
 
 
 def should_warn(r):
@@ -107,19 +121,16 @@ async def error_middleware(request, handler):
     except HTTPException as e:
         should_warn_ = request.app.get('middleware_should_warn') or should_warn
         if should_warn_(e):
-            await log_warning(request, e, exc_info=True)
+            await log_warning(request, e)
         raise
     except Exception as exc:
-        logger.exception(
-            '%s: %s',
-            exc.__class__.__name__,
-            exc,
-            extra={
-                'fingerprint': [exc.__class__.__name__, str(exc)],
-                **await log_extra(request, exception_extra=exc_extra(exc)),
-            },
-        )
-        raise HTTPInternalServerError()
+        message, event = await event_extra(request, exception_extra=exc_extra(exc))
+        logger.exception('%s %s failed %r', request.method, request.rel_url, exc, extra=event)
+        exc_data, hint = event_from_exception(exc_info_from_error(exc))
+        event.update(level='error', message=message)
+        event.update(**exc_data)
+        capture_event(event, hint)
+        raise HTTPInternalServerError() from exc
     else:
         # TODO cope with case that r is not a response
         should_warn_ = request.app.get('middleware_should_warn') or should_warn

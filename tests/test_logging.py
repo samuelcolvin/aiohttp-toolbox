@@ -82,3 +82,8 @@ def test_build_logging_config_sentry():
         assert 'app' not in config['loggers']
     finally:
         os.environ.pop('SENTRY_DSN')
+        from sentry_sdk.hub import _initial_client as sentry_client_ref
+
+        sentry_client = sentry_client_ref()
+        assert sentry_client.dsn == 'https://thekey@sentry.io/123456789'
+        sentry_client.close()
