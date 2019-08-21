@@ -23,6 +23,7 @@ async def test_500(cli, caplog):
     assert 'custom 500 error' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
+    assert record.message == 'GET /errors/{do}, unexpected response: 500'
     assert record.request['url'].startswith('http://127.0.0.1:')
     assert record.request['data'] == 'foobar'
     assert record.request['method'] == 'GET'
@@ -87,6 +88,7 @@ async def test_value_error(cli, caplog):
     assert '500: Internal Server Error' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
+    assert record.message == "GET /errors/{do}, unexpected response: 500, ValueError('snap')"
     assert record.extra.keys() == {
         'request_duration',
         'response_status',

@@ -50,10 +50,9 @@ async def event_extra(request: Request, response: Optional[Response] = None, **m
         except Exception:
             logger.exception('error getting user for middleware logging')
 
-    try:
+    view_name = None
+    with contextlib.suppress(AttributeError):
         view_name = request.match_info.route.name
-    except AttributeError:
-        view_name = None
 
     try:
         view_ref = request.match_info.route.resource.canonical
@@ -62,7 +61,7 @@ async def event_extra(request: Request, response: Optional[Response] = None, **m
     view_ref = view_ref or str(request.rel_url)
 
     response_status = getattr(response, 'status', 500)
-    msg = f'{request.method} {view_ref} unexpected response {response_status}'
+    msg = f'{request.method} {view_ref}, unexpected response: {response_status}'
     event_data = dict(
         level='warning',
         logger='atoolbox.middleware',
@@ -91,11 +90,7 @@ async def event_extra(request: Request, response: Optional[Response] = None, **m
 
 
 async def log_warning(request: Request, response: Optional[Response]):
-    try:
-        message, event = await event_extra(request, response)
-    except Exception:  # pragma: no cover
-        logger.critical('error getting extra data for request', exc_info=True)
-        return
+    message, event = await event_extra(request, response)
     logger.warning(message, extra=event)
 
     event['message'] = message
@@ -132,6 +127,7 @@ async def error_middleware(request, handler):
         message, event = await event_extra(request, exception_extra=exc_extra(exc))
         # make sure these errors appear independently
         event['fingerprint'] += (repr(exc),)
+        message += f', {exc!r}'
         logger.exception(message, extra=event)
         exc_data, hint = event_from_exception(exc_info_from_error(exc))
         event.update(exc_data)
