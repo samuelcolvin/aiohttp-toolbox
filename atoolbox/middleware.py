@@ -34,10 +34,7 @@ def exc_extra(exc):
 
 async def event_extra(request: Request, response: Optional[Response] = None, **more) -> Tuple[str, Dict[str, Any]]:
     start = request.get('start_time')
-    if start:
-        duration = f'{(time() - start) * 1000:0.2f}ms'
-    else:
-        duration = None
+    duration = start and f'{(time() - start) * 1000:0.2f}ms'
 
     request_text = response_text = None
     with contextlib.suppress(Exception):  # UnicodeDecodeError or HTTPRequestEntityTooLarge maybe other things too
