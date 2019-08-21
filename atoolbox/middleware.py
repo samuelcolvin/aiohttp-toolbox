@@ -54,33 +54,40 @@ async def event_extra(request: Request, response: Optional[Response] = None, **m
             logger.exception('error getting user for middleware logging')
 
     try:
-        view_name = request.match_info.route.name or request.match_info.route.resource.canonical
+        view_name = request.match_info.route.name
     except AttributeError:
         view_name = None
-    view_name = view_name or str(request.rel_url)
+
+    try:
+        view_ref = request.match_info.route.resource.canonical
+    except AttributeError:
+        view_ref = None
+    view_ref = view_ref or str(request.rel_url)
 
     response_status = getattr(response, 'status', 500)
-    msg = f'{request.method} {view_name} unexpected response {response_status}'
+    msg = f'{request.method} {view_ref} unexpected response {response_status}'
     event_data = dict(
         level='warning',
         logger='atoolbox.middleware',
         extra=dict(
             request_duration=duration,
-            response=dict(status=response_status, headers=dict(getattr(response, 'headers', {})), text=response_text),
+            response_status=response_status,
+            response_headers=dict(getattr(response, 'headers', {})),
+            response_text=response_text,
+            view_name=view_name,
             **more,
         ),
         user=user,
-        transaction=view_name,
-        fingerprint=(view_name, str(response_status)),
+        transaction=view_ref,
+        fingerprint=(view_ref, str(response_status)),
         request=dict(
             url=str(request.url),
             query_string=request.query_string,
-            cookies=list(request.cookies.items()),
-            headers=list(request.headers.items()),
+            cookies=dict(request.cookies),
+            headers=dict(request.headers),
             method=request.method,
             data=lenient_json(request_text),
             inferred_content_type=request.content_type,
-            env={'REMOTE_ADDR': user['ip_address'], 'DURATION': duration},
         ),
     )
     return msg, event_data
@@ -94,9 +101,10 @@ async def log_warning(request: Request, response: Optional[Response]):
         return
     logger.warning(message, extra=event)
 
+    event['message'] = message
     if isinstance(response, Exception):
         exc_data, hint = event_from_exception(exc_info_from_error(response))
-        event.update(message=message, **exc_data)
+        event.update(exc_data)
         capture_event(event, hint)
     else:
         capture_event(event)
@@ -125,10 +133,12 @@ async def error_middleware(request, handler):
         raise
     except Exception as exc:
         message, event = await event_extra(request, exception_extra=exc_extra(exc))
-        logger.exception('%s %s failed %r', request.method, request.rel_url, exc, extra=event)
+        # make sure these errors appear independently
+        event['fingerprint'] += (repr(exc),)
+        logger.exception(message, extra=event)
         exc_data, hint = event_from_exception(exc_info_from_error(exc))
+        event.update(exc_data)
         event.update(level='error', message=message)
-        event.update(**exc_data)
         capture_event(event, hint)
         raise HTTPInternalServerError() from exc
     else:

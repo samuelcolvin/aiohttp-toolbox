@@ -76,7 +76,7 @@ def test_build_logging_config_sentry():
         config = build_logging_config(False, True, 'foobar')
         assert config['disable_existing_loggers'] is True
         assert config['handlers']['atoolbox.default']['level'] == 'INFO'
-        assert config['handlers']['atoolbox.warning']['class'] == 'logging.StreamHandler'
+        assert config['handlers']['atoolbox.warning']['class'] == 'logging.NullHandler'
 
         assert 'foobar' in config['loggers']
         assert 'app' not in config['loggers']

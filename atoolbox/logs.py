@@ -148,7 +148,7 @@ def build_logging_config(debug: bool, disable_existing: bool, main_logger_name: 
 
     if sentry_dsn:
         import sentry_sdk
-        from sentry_sdk.integrations.logging import LoggingIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 
         sentry_sdk.init(
             dsn=sentry_dsn,
@@ -156,7 +156,8 @@ def build_logging_config(debug: bool, disable_existing: bool, main_logger_name: 
             release=get_env_multiple('COMMIT', 'RELEASE'),
             server_name=get_env_multiple('DYNO', 'SERVER_NAME', 'HOSTNAME', 'HOST', 'NAME'),
         )
-        warning_handler = {'level': 'WARNING', 'class': 'logging.StreamHandler'}
+        ignore_logger('atoolbox.middleware')
+        warning_handler = {'level': 'WARNING', 'class': 'logging.NullHandler'}
         default_filters = []
     else:
         warning_handler = {

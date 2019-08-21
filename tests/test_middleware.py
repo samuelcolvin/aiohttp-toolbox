@@ -18,18 +18,17 @@ async def test_404_no_path(cli, caplog):
 
 
 async def test_500(cli, caplog):
-    r = await cli.get('/errors/500', data='foobar')
+    r = await cli.get('/errors/500', data='foobar', headers={'Cookie': 'foo=bar; x=y;'})
     assert r.status == 500, await r.text()
     assert 'custom 500 error' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.extra.keys() == {'request_duration', 'response'}
     assert record.request['url'].startswith('http://127.0.0.1:')
     assert record.request['data'] == 'foobar'
     assert record.request['method'] == 'GET'
-    assert record.request['cookies'] == []
-    assert ('Accept', '*/*') in record.request['headers']
-    assert record.extra['response']['text'] == 'custom 500 error'
+    assert record.request['cookies'] == {'foo': 'bar', 'x': 'y'}
+    assert record.request['headers']['Accept'] == '*/*'
+    assert record.extra['response_text'] == 'custom 500 error'
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
     assert record.fingerprint == ('/errors/{do}', '500')
 
@@ -40,10 +39,9 @@ async def test_503_with_name(cli, caplog):
     assert 'test response with status 503' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.extra.keys() == {'request_duration', 'response'}
-    assert record.extra['response']['text'] == 'test response with status 503'
+    assert record.extra['response_text'] == 'test response with status 503'
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
-    assert record.fingerprint == ('any-status', '503')
+    assert record.fingerprint == ('/status/{status}/', '503')
 
 
 async def test_405(cli, caplog):
@@ -52,9 +50,8 @@ async def test_405(cli, caplog):
     assert '405: Method Not Allowed' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.extra.keys() == {'request_duration', 'response'}
     assert record.request['data'] == ''
-    assert record.extra['response']['text'] == '405: Method Not Allowed'
+    assert record.extra['response_text'] == '405: Method Not Allowed'
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
     assert record.fingerprint == ('/', '405')
 
@@ -65,7 +62,6 @@ async def test_not_unicode(cli, caplog):
     assert 'custom 500 error' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.extra.keys() == {'request_duration', 'response'}
     assert record.request['data'] is None
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
 
@@ -75,7 +71,13 @@ async def test_499(cli, caplog):
     assert r.status == 499, await r.text()
     assert len(caplog.records) == 2
     record = caplog.records[1]
-    assert record.extra.keys() == {'request_duration', 'response'}
+    assert record.extra.keys() == {
+        'request_duration',
+        'response_status',
+        'response_headers',
+        'response_text',
+        'view_name',
+    }
     assert record.user == {'ip_address': '127.0.0.1'}
 
 
@@ -85,7 +87,14 @@ async def test_value_error(cli, caplog):
     assert '500: Internal Server Error' == await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.extra.keys() == {'request_duration', 'response', 'exception_extra'}
+    assert record.extra.keys() == {
+        'request_duration',
+        'response_status',
+        'response_headers',
+        'response_text',
+        'view_name',
+        'exception_extra',
+    }
     assert record.extra['exception_extra'] is None
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
 
@@ -95,7 +104,13 @@ async def test_user(cli, caplog):
     assert r.status == 488, await r.text()
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.extra.keys() == {'request_duration', 'response'}
+    assert record.extra.keys() == {
+        'request_duration',
+        'response_status',
+        'response_headers',
+        'response_text',
+        'view_name',
+    }
     assert record.user == {'ip_address': '127.0.0.1', 'username': 'foobar'}
 
 
