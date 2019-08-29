@@ -15,11 +15,17 @@ jobs:
       redis:
         image: redis
         ports:
-          - 6379/tcp
+          - 6379:6379
       postgres:
         image: postgres:11
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
         ports:
-          - 5432/tcp
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
     - uses: actions/checkout@v1
@@ -40,10 +46,8 @@ jobs:
       run: make lint
     - name: test main
       run: |
-        echo "redis: ${{ job.services.redis.ports['6379'] }}"
-        echo "postgres: ${{ job.services.postgres.ports['5432'] }}"
-        export PG_URL="postgres://postgres@localhost:${{ job.services.postgres.ports['5432'] }}/atoolbox_test"
-        export REDIS_URL="redis://localhost:${{ job.services.redis.ports['6379'] }}/6"
+        export PG_URL="postgres://postgres@localhost:${{ job.services.postgres.ports[5432] }}/atoolbox_test"
+        export REDIS_URL="redis://localhost:${{ job.services.redis.ports[6379] }}/6"
         echo "redis: $REDIS_URL, pg: $PG_URL"
         make test
         mv .coverage .coverage.full
