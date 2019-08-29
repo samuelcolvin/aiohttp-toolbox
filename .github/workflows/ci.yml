@@ -31,19 +31,20 @@ jobs:
       run: make install-minimal
     - name: test minimal
       run: |
-        printenv
-        echo "${{ job.services.redis.ports['6379'] }}"
-        echo "${{ job.services.postgres.ports['6379'] }}"
-
         make test-minimal
         mv .coverage .coverage.minimal
 
     - name: install main
       run: make install
     - name: lint
-      run: make main
+      run: make lint
     - name: test main
       run: |
+        echo "redis: ${{ job.services.redis.ports['6379'] }}"
+        echo "postgres: ${{ job.services.postgres.ports['5432'] }}"
+        export PG_URL="postgres://postgres@localhost:${{ job.services.postgres.ports['5432'] }}/atoolbox_test"
+        export REDIS_URL="redis://localhost:${{ job.services.redis.ports['6379'] }}/6"
+        echo "redis: $REDIS_URL, pg: $PG_URL"
         make test
         mv .coverage .coverage.full
 
@@ -53,4 +54,5 @@ jobs:
 
     - name: coverage
       run: |
+        ls -lh
         coverage combine
