@@ -1,0 +1,46 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7]
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379/tcp
+      redis:
+        image: postgres:11
+        ports:
+          - 5432/tcp
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: test
+      run: |
+        pip freeze | xargs pip uninstall -y
+        make install-minimal
+        make test-minimal && mv .coverage .coverage.minimal
+
+        make install
+        make lint
+        make test && mv .coverage .coverage.full
+
+        ./tests/check_tag.py
+        ls -lha
+        pip freeze
+
+        coverage combine
+        bash <(curl -s https://codecov.io/bash)
+
