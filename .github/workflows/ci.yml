@@ -54,5 +54,6 @@ jobs:
 
     - name: coverage
       run: |
-        ls -lh
+        ls -alh
         coverage combine
+        bash <(curl -s https://codecov.io/bash) -t CODECOV_TOKEN
