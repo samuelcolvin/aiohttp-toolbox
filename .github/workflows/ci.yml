@@ -52,8 +52,10 @@ jobs:
         # ls -lha
         # pip freeze
 
-    - name: coverage
+    - name: coverage combine
       run: |
         ls -alh
         coverage combine
-        bash <(curl -s https://codecov.io/bash) -t CODECOV_TOKEN
+    - uses: codecov/codecov-action@master
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
