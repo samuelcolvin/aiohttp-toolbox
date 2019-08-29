@@ -35,6 +35,7 @@ jobs:
       run: |
         make test-minimal
         mv .coverage .coverage.minimal
+        ls -alh
 
     - name: install main
       run: make install
@@ -44,18 +45,16 @@ jobs:
       run: |
         export PG_URL="postgres://postgres@localhost:${{ job.services.postgres.ports[5432] }}/atoolbox_test"
         export REDIS_URL="redis://localhost:${{ job.services.redis.ports[6379] }}/6"
-        echo "redis: $REDIS_URL, pg: $PG_URL"
         make test
         mv .coverage .coverage.full
-
-        # ./tests/check_tag.py
-        # ls -lha
-        # pip freeze
+        pip freeze
+        ls -alh
 
     - name: coverage combine
       run: |
         ls -alh
         coverage combine
+        ls -alh
     - uses: codecov/codecov-action@master
       with:
         token: ${{secrets.CODECOV_TOKEN}}
