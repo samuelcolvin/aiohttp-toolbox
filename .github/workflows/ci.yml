@@ -25,12 +25,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: install minimal
       run: make install-minimal
+
     - name: test minimal
       run: |
         make test-minimal
@@ -39,10 +42,13 @@ jobs:
 
     - name: install main
       run: make install
+
     - name: lint
       run: make lint
+
     - name: test main
       run: |
+        ls -alh
         export PG_URL="postgres://postgres@localhost:${{ job.services.postgres.ports[5432] }}/atoolbox_test"
         export REDIS_URL="redis://localhost:${{ job.services.redis.ports[6379] }}/6"
         make test
@@ -50,11 +56,9 @@ jobs:
         pip freeze
         ls -alh
 
-    - name: coverage combine
+    - name: coverage upload
       run: |
         ls -alh
         coverage combine
         ls -alh
-    - uses: codecov/codecov-action@master
-      with:
-        token: ${{secrets.CODECOV_TOKEN}}
+        bash <(curl -s https://codecov.io/bash) -t ${{secrets.CODECOV_TOKEN}}
