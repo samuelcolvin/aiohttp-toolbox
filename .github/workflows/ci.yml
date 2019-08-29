@@ -27,20 +27,30 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: test
+    - name: install minimal
+      run: make install-minimal
+    - name: test minimal
       run: |
-        # pip freeze | xargs pip uninstall -y
-        make install-minimal
-        make test-minimal && mv .coverage .coverage.minimal
+        printenv
+        echo "${{ job.services.redis.ports['6379'] }}"
+        echo "${{ job.services.postgres.ports['6379'] }}"
 
-        make install
-        make lint
-        make test && mv .coverage .coverage.full
+        make test-minimal
+        mv .coverage .coverage.minimal
 
-        ./tests/check_tag.py
-        ls -lha
-        pip freeze
+    - name: install main
+      run: make install
+    - name: lint
+      run: make main
+    - name: test main
+      run: |
+        make test
+        mv .coverage .coverage.full
 
+        # ./tests/check_tag.py
+        # ls -lha
+        # pip freeze
+
+    - name: coverage
+      run: |
         coverage combine
-        bash <(curl -s https://codecov.io/bash)
-
