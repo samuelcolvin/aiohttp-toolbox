@@ -3,6 +3,10 @@
 History
 -------
 
+v0.5.4 (unreleased)
+...................
+* drop and recreate schema with a different connection before populating the database
+
 v0.5.3 (2019-08-21)
 ...................
 * Switch to direct usage of sentry-sdk (sigh)
