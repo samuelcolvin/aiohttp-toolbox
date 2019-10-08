@@ -169,7 +169,8 @@ def csrf_checks(request, settings: BaseSettings):  # noqa: C901 (ignore complexi
         return
 
     ct = request.headers.get('Content-Type', '')
-    if _path_match(request, settings.csrf_upload_paths):
+    is_upload = _path_match(request, settings.csrf_upload_paths)
+    if is_upload:
         if not ct.startswith('multipart/form-data; boundary'):
             return 'upload path, wrong Content-Type'
     else:
@@ -181,11 +182,11 @@ def csrf_checks(request, settings: BaseSettings):  # noqa: C901 (ignore complexi
         return
 
     origin = request.headers.get('Origin')
-    if not origin:
-        # being strict here and requiring Origin to be present, are there any cases where this breaks
+    if not origin and not is_upload:
+        # requiring origin unless it's an upload (firefox omits Origin on file uploads),
+        # are there any other cases where this breaks?
         return 'Origin missing'
 
-    origin = remove_port(origin)
     referrer = request.headers.get('Referer')
     if referrer:
         referrer_url = URL(referrer)
@@ -193,6 +194,14 @@ def csrf_checks(request, settings: BaseSettings):  # noqa: C901 (ignore complexi
     else:
         referrer_root = None
 
+    if is_upload and not origin:
+        # no origin, can only check the referrer
+        if referrer_root != remove_port(request_root(request)):
+            return 'Referer wrong'
+        else:
+            return
+
+    origin = remove_port(origin)
     if _path_match(request, settings.csrf_cross_origin_paths):
         # no origin is okay
         if not any(r.fullmatch(origin) for r in settings.cross_origin_origins):

@@ -1,4 +1,4 @@
-from aiohttp import FormData
+from aiohttp import ClientSession, FormData
 
 from atoolbox.middleware import exc_extra
 from conftest import pre_startup_app
@@ -132,6 +132,14 @@ def test_exc_extra_error():
     assert exc_extra(Foo()) is None
 
 
+async def test_csrf_localhost(cli):
+    async with ClientSession() as client:
+        r = await client.post(
+            f'http://localhost:{cli.server.port}/status/202/', data='1', headers={'Content-Type': 'application/json'}
+        )
+        assert r.status == 202, await r.text()
+
+
 async def test_csrf_no_path(cli):
     r = await cli.post('/orgs/add/', data='null')
     assert r.status == 403, await r.text()
@@ -204,8 +212,23 @@ async def test_csrf_ok_upload(cli):
     assert r.status == 200, await r.text()
 
 
-async def test_preflight_ok(cli):
+async def test_csrf_upload_no_origin(cli):
+    data = FormData()
+    data.add_field('image', b'xxxx', filename='testing.png', content_type='application/octet-stream')
+    r = await cli.post('/upload-path/', data=data, headers={'Referer': f'http://127.0.0.1:{cli.server.port}/foobar/'})
+    assert r.status == 200, await r.text()
 
+
+async def test_csrf_upload_no_origin_bad_referer(cli):
+    data = FormData()
+    data.add_field('image', b'xxxx', filename='testing.png', content_type='application/octet-stream')
+    r = await cli.post('/upload-path/', data=data, headers={'Referer': f'http://foobar.com/foobar/'})
+    assert r.status == 403, await r.text()
+    obj = await r.json()
+    assert obj == {'message': 'CSRF failure: Referer wrong'}
+
+
+async def test_preflight_ok(cli):
     headers = {'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'Content-Type'}
     r = await cli.options('/exec/', headers=headers)
     assert r.status == 200, await r.text()

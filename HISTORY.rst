@@ -3,9 +3,10 @@
 History
 -------
 
-v0.5.4 (unreleased)
+v0.6.0 (unreleased)
 ...................
 * drop and recreate schema with a different connection before populating the database
+* fix CSRF failure on file upload on firefox by allowing no Origin for uploads
 
 v0.5.3 (2019-08-21)
 ...................

@@ -59,7 +59,7 @@ async def cleanup(app: web.Application):
 
 async def create_default_app(*, settings: BaseSettings = None, middleware=None, routes=None):
     auth_key = getattr(settings, 'auth_key', None)
-    if not middleware:
+    if middleware is None:
         middleware = (error_middleware, pg_middleware, csrf_middleware)
         if auth_key:
             try:
