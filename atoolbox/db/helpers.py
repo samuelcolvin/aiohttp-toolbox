@@ -87,7 +87,7 @@ class _ConnAcquire:
         self._conn = conn
         self._lock = lock
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> DummyPgConn:
         return DummyPgConn(self._conn, self._lock)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -105,6 +105,14 @@ class DummyPgPool(_LockedExecute):
 
     async def close(self):
         pass
+
+    def as_dummy_conn(self) -> DummyPgConn:
+        """
+        convert to a DummyPgConn.
+
+        **THIS IS OBVIOUSLY ONLY TO BE USED IN TESTS**
+        """
+        return DummyPgConn(self._conn, self._lock)
 
     def __repr__(self) -> str:
         return f'<DummyPgPool {self._conn._addr} {self._conn._params}>'
