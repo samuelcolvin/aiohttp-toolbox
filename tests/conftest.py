@@ -11,8 +11,8 @@ from demo.main import create_app
 from demo.settings import Settings
 
 settings_args = dict(
-    DATABASE_URL='postgres://postgres@localhost:5432/atoolbox_test',
-    REDISCLOUD_URL='redis://localhost:6379/6',
+    pg_dsn='postgres://postgres@localhost:5432/atoolbox_test',
+    redis_settings='redis://localhost:6379/6',
     create_app='tests.demo.main.create_app',
     sql_path='tests/demo/models.sql',
     cross_origin_origins=['null', r'http://127\.0\.0\.1'],

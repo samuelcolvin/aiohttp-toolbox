@@ -11,9 +11,9 @@ from atoolbox.cli import main as cli_main
 def env_fixture():
     os.environ.pop('ATOOLBOX_ROOT_DIR', None)
     os.environ['ATOOLBOX_SETTINGS'] = 'demo.settings.Settings'
-    os.environ['APP_CREATE_APP'] = 'demo.main.create_app'
-    os.environ['APP_SQL_PATH'] = 'tests/demo/models.sql'
-    os.environ['DATABASE_URL'] = 'postgres://postgres@localhost:5432/atoolbox_test'
+    os.environ['create_app'] = 'demo.main.create_app'
+    os.environ['sql_path'] = 'tests/demo/models.sql'
+    os.environ['pg_dsn'] = 'postgres://postgres@localhost:5432/atoolbox_test'
 
 
 def test_reset_database(mocker, env):
@@ -77,13 +77,13 @@ def test_invalid_command(capsys, env):
 def test_worker(env, tmp_work_path):
     code = 'def bar(*args, **kwargs):\n  with open("sentinal.txt", "w") as f:\n    f.write("executed")\n'
     (tmp_work_path / 'foo.py').write_text(code)
-    os.environ['APP_WORKER_FUNC'] = 'foo.bar'
+    os.environ['worker_func'] = 'foo.bar'
     assert 0 == cli_main('worker')
     assert (tmp_work_path / 'sentinal.txt').read_text() == 'executed'
 
 
 def test_no_worker(caplog, env):
-    del os.environ['APP_WORKER_FUNC']
+    del os.environ['worker_func']
     assert 1 == cli_main('worker')
     assert "settings.worker_func not set, can't run the worker" in caplog.text
 
@@ -168,7 +168,7 @@ def test_auto_worker(mocker, env, tmp_work_path):
     f = mocker.patch('atoolbox.cli.run_app')
     code = 'def bar(*args, **kwargs):\n  with open("sentinal.txt", "w") as f:\n    f.write("executed")\n'
     (tmp_work_path / 'foo.py').write_text(code)
-    os.environ['APP_WORKER_FUNC'] = 'foo.bar'
+    os.environ['worker_func'] = 'foo.bar'
     assert not (tmp_work_path / 'sentinal.txt').exists()
 
     assert 0 == cli_main('auto')
@@ -212,7 +212,7 @@ def test_auto_worker_nothing_set(mocker, env, caplog, tmp_work_path):
 
     code = 'def bar(*args, **kwargs):\n  with open("sentinal.txt", "w") as f:\n    f.write("executed")\n'
     (tmp_work_path / 'foo.py').write_text(code)
-    os.environ['APP_WORKER_FUNC'] = 'foo.bar'
+    os.environ['worker_func'] = 'foo.bar'
 
     f = mocker.patch('atoolbox.cli.run_app')
     f.side_effect = mock_run_app

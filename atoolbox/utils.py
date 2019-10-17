@@ -4,7 +4,7 @@ from typing import Any, Tuple, Type, TypeVar, Union
 
 from aiohttp.web import Response
 from pydantic import BaseModel, ValidationError, validate_model
-from pydantic.fields import Shape
+from pydantic.fields import SHAPE_SINGLETON
 
 from .exceptions import JsonErrors
 from .json_tools import JSON_CONTENT_TYPE
@@ -73,7 +73,7 @@ def parse_request_query(request, model: Type[PydanticModel], *, headers=None) ->
     for k in request.query:
         v = request.query.getall(k)
         f = model.__fields__.get(k)
-        if len(v) > 1 or f and f.shape != Shape.SINGLETON:
+        if len(v) > 1 or f and f.shape != SHAPE_SINGLETON:
             data[k] = v
         else:
             data[k] = v[0]
@@ -94,7 +94,7 @@ async def parse_request_json_ignore_missing(
     if not isinstance(raw_data, dict):
         raise JsonErrors.HTTPBadRequest(message='data not a dictionary', headers=headers)
 
-    data, _, e = validate_model(model, raw_data, raise_exc=False)
+    data, _, e = validate_model(model, raw_data)
     if e:
         errors = [e for e in e.errors() if not (e['type'] == 'value_error.missing' and len(e['loc']) == 1)]
         if errors:
