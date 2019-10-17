@@ -73,6 +73,9 @@ async def test_simple_pool(db_conn):
     async with pool.acquire() as conn:
         assert 625 == await conn.fetchval('SELECT 25 * 25')
         assert repr(conn).startswith("<DummyPgConn ('localhost', 5432) ConnectionParameters(user='postgres'")
+        async with conn.transaction():
+            assert 625 == await pool.fetchval('SELECT 25 * 25')
+    assert not hasattr(pool, 'transaction')
 
 
 @pytest.mark.parametrize(

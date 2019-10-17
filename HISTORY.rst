@@ -3,6 +3,10 @@
 History
 -------
 
+v0.6.1 (2019-10-17)
+...................
+* fix ``DummyPgPool`` to not allow direct transactions.
+
 v0.6.0 (2019-10-08)
 ...................
 * drop and recreate schema with a different connection before populating the database

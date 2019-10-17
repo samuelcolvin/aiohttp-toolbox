@@ -94,7 +94,7 @@ class _ConnAcquire:
         pass
 
 
-class DummyPgPool(DummyPgConn):
+class DummyPgPool(_LockedExecute):
     """
     dummy connection pool useful for testing, only one connection is used, but this will behave like
     Connection or BuildPgConnection, including locking before using the underlying connection.
