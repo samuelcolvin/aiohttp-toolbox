@@ -76,4 +76,4 @@ async def test_settings_defaults_none():
     assert s.auth_key is None
 
     with pytest.raises(RuntimeError):
-        BaseSettings(REDISCLOUD_URL='redis://localhost:6379')
+        BaseSettings(redis_settings='redis://localhost:6379')
