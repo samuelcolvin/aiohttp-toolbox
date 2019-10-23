@@ -104,4 +104,4 @@ class BaseSettings(_BaseSettings):
         )
 
     class Config:
-        fields = {'port': 'PORT', 'pg_dsn': 'DATABASE_URL', 'redis_settings': 'REDISCLOUD_URL'}
+        fields = {'pg_dsn': {'env': 'DATABASE_URL'}, 'redis_settings': {'env': ['REDISCLOUD_URL', 'REDIS_URL']}}

@@ -3,6 +3,10 @@
 History
 -------
 
+v0.6.2 (2019-10-23)
+...................
+* uprev. pydantic to Version 1
+
 v0.6.1 (2019-10-17)
 ...................
 * fix ``DummyPgPool`` to not allow direct transactions.

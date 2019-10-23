@@ -53,7 +53,7 @@ setup(
         'async-timeout>=3.0.1',
         'cchardet>=2.1.4',
         'dataclasses>=0.6;python_version<"3.7"',
-        'pydantic>=0.32.2',
+        'pydantic>=1',
         'sentry-sdk>=0.11.1',
         'uvloop>=0.11.2',
     ],
