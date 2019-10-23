@@ -13,7 +13,7 @@ def env_fixture():
     os.environ['ATOOLBOX_SETTINGS'] = 'demo.settings.Settings'
     os.environ['create_app'] = 'demo.main.create_app'
     os.environ['sql_path'] = 'tests/demo/models.sql'
-    os.environ['pg_dsn'] = 'postgres://postgres@localhost:5432/atoolbox_test'
+    os.environ['database_url'] = 'postgres://postgres@localhost:5432/atoolbox_test'
 
 
 def test_reset_database(mocker, env):
