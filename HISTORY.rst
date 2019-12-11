@@ -3,6 +3,10 @@
 History
 -------
 
+v0.6.3 (unreleased)
+...................
+* add ``parse_request`` method to ``ExecView``
+
 v0.6.2 (2019-10-23)
 ...................
 * uprev. pydantic to Version 1

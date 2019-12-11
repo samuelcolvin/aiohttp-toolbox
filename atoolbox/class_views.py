@@ -59,8 +59,11 @@ class ExecView(View):
     async def options(self):
         return json_response(**self.Model.schema())
 
+    async def parse_request(self) -> Model:
+        return await parse_request_json(self.request, self.Model)
+
     async def post(self):
-        m = await parse_request_json(self.request, self.Model)
+        m = await self.parse_request()
         response_data = await shield(self.execute(m))
         response_data = response_data or {'status': 'ok'}
         return json_response(**response_data)
