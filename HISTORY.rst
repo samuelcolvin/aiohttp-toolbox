@@ -3,7 +3,7 @@
 History
 -------
 
-v0.6.3 (unreleased)
+v0.6.3 (2019-12-12)
 ...................
 * add ``parse_request`` method to ``ExecView``
 
